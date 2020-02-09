@@ -27,14 +27,14 @@ impl<T: ?Sized + 'static> AnyTrait for Trait<T> {
 }
 
 pub trait Loader<T: ?Sized + 'static> {
-    fn load(&self, service_locator: &ServiceLocator) -> &Arc<T>;
+    fn load(&self, service_locator: &ServiceLocator) -> Box<Arc<T>>;
 }
 
 pub struct ExistingLoader<T: ?Sized + 'static>(Arc<T>);
 
 impl<T: ?Sized + 'static> Loader<T> for ExistingLoader<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> &Arc<T> {
-        &self.0
+    fn load(&self, service_locator: &ServiceLocator) -> Box<Arc<T>> {
+        Box::new(Arc::clone(&self.0))
     }
 }
 
@@ -56,13 +56,13 @@ impl<T: ?Sized + 'static> Loader<T> for SingletonLoader<T> {
 }*/
 
 trait AnyLoader {
-    fn load(&self, service_locator: &ServiceLocator) -> &dyn Any;
+    fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any>;
 }
 
 struct AnyLoaderFn<T: ?Sized + 'static>(Arc<dyn Loader<T>>);
 
 impl<T: ?Sized + 'static> AnyLoader for AnyLoaderFn<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> &dyn Any {
+    fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any> {
         self.0.load(service_locator)
     }
 }
@@ -78,10 +78,10 @@ impl ServiceLocator {
 
     pub fn resolve<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
         self.resolve_any(&TypeId::of::<T>())
-            .map(|any| Arc::clone(any.downcast_ref::<Arc<T>>().unwrap()))
+            .map(|any| *any.downcast::<Arc<T>>().unwrap())
     }
 
-    fn resolve_any(&self, id: &TypeId) -> Option<&dyn Any> {
+    fn resolve_any(&self, id: &TypeId) -> Option<Box<dyn Any>> {
         self.bindings.get(id).map(|loader| loader.load(self))
     }
 
