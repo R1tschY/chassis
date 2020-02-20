@@ -3,17 +3,6 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use crate::loader::Loader;
 
-/*/// Trait with only the load function to reduce code bloat
-trait SealedLoader<T: ?Sized + 'static> {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T>;
-}
-
-impl<T: ?Sized + 'static, U: Loader<T>> SealedLoader<T> for U {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
-        self.load(service_locator)
-    }
-}*/
-
 trait AnyLoader {
     fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any>;
 }

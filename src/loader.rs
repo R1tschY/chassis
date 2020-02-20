@@ -1,6 +1,8 @@
 use crate::service_locator::ServiceLocator;
 use std::sync::Arc;
 use std::marker::PhantomData;
+use std::cell::{RefCell, Cell};
+use std::ops::Deref;
 
 
 pub trait Loader<T: ?Sized + 'static> {
@@ -60,22 +62,17 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<U> for AsTrait<T, U, L> where 
 }
 
 
-/*pub struct SingletonLoader<T: ?Sized + 'static> {
+pub struct SingletonLoader<T: ?Sized + 'static> {
     loader: Box<dyn Loader<T>>,
     cache: RefCell<Option<Arc<T>>>
 }
 
 impl<T: ?Sized + 'static> Loader<T> for SingletonLoader<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> &Arc<T> {
-        {
-            let mut instance = self.cache.borrow_mut();
-            if instance.is_none() {
-                instance = Some(Arc::clone(self.loader.load(service_locator)));
-            }
-        }
-        &self.cache.borrow().unwrap()
+    fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
+        let mut ptr = self.cache.try_borrow_mut().expect("cyclic dependency detected");
+        Arc::clone(ptr.get_or_insert_with(|| self.loader.load(service_locator)))
     }
-}*/
+}
 
 
 #[cfg(test)]
@@ -90,8 +87,8 @@ mod tests {
 
     #[test]
     fn as_trait() {
-        let loader = FactoryLoader(Box::new(|sf| Dummy()));
-        let as_trait = loader.into_trait_loader::<DummyTrait>();
-
+        // let loader = FactoryLoader(Box::new(|sf| Dummy()));
+        // let as_trait: Arc<Dummy> =
+        //     Box::new(loader.into_trait_loader::<dyn DummyTrait>()).load();
     }
 }
