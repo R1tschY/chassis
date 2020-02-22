@@ -1,8 +1,7 @@
 use crate::service_locator::ServiceLocator;
 use std::sync::Arc;
 use std::marker::PhantomData;
-use std::cell::{RefCell, Cell};
-use std::ops::Deref;
+use std::cell::{RefCell};
 
 
 pub trait Loader<T: ?Sized + 'static> {
@@ -26,7 +25,7 @@ pub trait Loader<T: ?Sized + 'static> {
 pub struct ExistingLoader<T: ?Sized + 'static>(pub Arc<T>);
 
 impl<T: ?Sized + 'static> Loader<T> for ExistingLoader<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
+    fn load(&self, _service_locator: &ServiceLocator) -> Arc<T> {
         Arc::clone(&self.0)
     }
 }
@@ -77,13 +76,13 @@ impl<T: ?Sized + 'static> Loader<T> for SingletonLoader<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
-    struct Dummy();
-
-    trait DummyTrait { }
-
-    impl DummyTrait for Dummy { }
+    // struct Dummy();
+    //
+    // trait DummyTrait { }
+    //
+    // impl DummyTrait for Dummy { }
 
     #[test]
     fn as_trait() {

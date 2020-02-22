@@ -5,7 +5,7 @@ authors = ["Richard Liebscher <r1tschy@posteo.de>"]
 edition = "2018"
 
 [dependencies]
-
+chassis-proc-macros = { path = "proc_macros" }
 
 [dev-dependencies]
 assert_matches = "1.3"

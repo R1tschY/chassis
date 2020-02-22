@@ -14,6 +14,11 @@ trait Converter {
 
 struct Dummy();
 
+impl Dummy {
+    //#[inject]
+    pub fn new() -> Self { Self() }
+}
+
 impl Converter for Dummy {
     fn convert(&self, bytes: &[u8]) -> Vec<u8> {
         bytes.into()
@@ -22,7 +27,7 @@ impl Converter for Dummy {
 
 fn main() {
     let mut sl = ServiceLocator::new();
-    sl.register(FactoryLoader(Box::new(|sl| Dummy())));
+    sl.register(FactoryLoader(Box::new(|_sl| Dummy::new())));
 
     sl.resolve::<Dummy>().unwrap().convert(&[1, 2, 3]);
 }

@@ -2,6 +2,8 @@ use std::sync::Arc;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use crate::loader::Loader;
+use crate::{Provider, ProviderPtr};
+use crate::resolve::{ResolveFrom};
 
 trait AnyLoader {
     fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any>;
@@ -24,13 +26,27 @@ impl ServiceLocator {
         Self { bindings: HashMap::new() }
     }
 
+    #[inline]
+    pub fn contains<T: ?Sized + 'static>(&self) -> bool {
+        self.contains_loader(TypeId::of::<T>())
+    }
+
     pub fn resolve<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
-        self.resolve_any(&TypeId::of::<T>())
+        self.resolve_any(TypeId::of::<T>())
             .map(|any| *any.downcast::<Arc<T>>().unwrap())
     }
 
-    fn resolve_any(&self, id: &TypeId) -> Option<Box<dyn Any>> {
-        self.bindings.get(id).map(|loader| loader.load(self))
+    #[inline]
+    pub fn resolve_to<T: ResolveFrom>(&self) -> T {
+        T::resolve_from(self)
+    }
+
+    fn contains_loader(&self, id: TypeId) -> bool {
+        self.bindings.contains_key(&id)
+    }
+
+    fn resolve_any(&self, id: TypeId) -> Option<Box<dyn Any>> {
+        self.bindings.get(&id).map(|loader| loader.load(self))
     }
 
     pub fn register<T: ?Sized + 'static, U: Loader<T> + 'static>(&mut self, loader: U) {
@@ -40,13 +56,25 @@ impl ServiceLocator {
     fn register_any(&mut self, id: TypeId, loader: Box<dyn AnyLoader>) {
         self.bindings.insert(id, loader);
     }
+
+    // #[inline]
+    // pub fn to_provider<T: ?Sized + 'static>(&self) -> ProviderPtr<T> {
+    //     assert!(self.contains::<T>());
+    //     ProviderPtr::new(self)
+    // }
+}
+
+// TODO: check if T is in ServiceLocator before creating a Provider
+impl<'a, T: ?Sized + 'static> Provider<T> for &ServiceLocator {
+    fn get(&self) -> Arc<T> {
+        self.resolve::<T>().unwrap()
+    }
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::any::{Any, TypeId};
     use std::fmt::Debug;
     use crate::loader::ExistingLoader;
 
@@ -84,7 +112,7 @@ mod tests {
 
     #[test]
     fn test_resolve_nonexisting() {
-        let mut locator = ServiceLocator::new();
+        let locator = ServiceLocator::new();
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
         assert_eq!(None, locator.resolve::<Impl1>());
     }
