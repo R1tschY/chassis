@@ -1,5 +1,6 @@
 // #![feature(trace_macros)]
 // trace_macros!(true);
+#![feature(proc_macro_hygiene)]
 
 #[macro_use] extern crate chassis;
 #[macro_use] extern crate assert_matches;
@@ -37,9 +38,9 @@ impl Class3 {
 #[test]
 fn inject_function_resolve() {
     let mut sl = ServiceLocator::new();
-    sl.register(FactoryLoader(Box::new(Class1::__inject_new)));
-    sl.register(FactoryLoader(Box::new(Class2::__inject_new)));
-    sl.register(FactoryLoader(Box::new(Class3::__inject_new)));
+    sl.register(FactoryLoader(Box::new(factory!(Class1::new))));
+    sl.register(FactoryLoader(Box::new(factory!(Class2::new))));
+    sl.register(FactoryLoader(Box::new(factory!(Class3::new))));
 
     assert!(sl.contains::<Class3>());
     assert_matches!(sl.resolve::<Class3>(), Some(_))
