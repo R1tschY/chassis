@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::loader::Loader;
 use crate::resolve::ResolveFrom;
-use crate::{Module, Provider, ProviderPtr};
+use crate::{Module, Provider};
 
 trait AnyLoader {
     fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any>;
@@ -18,6 +18,7 @@ impl<T: ?Sized + 'static> AnyLoader for AnyLoaderRef<T> {
     }
 }
 
+#[derive(Default)]
 pub struct ServiceLocator {
     bindings: HashMap<TypeId, Box<dyn AnyLoader>>,
 }

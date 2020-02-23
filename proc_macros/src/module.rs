@@ -1,7 +1,5 @@
 use proc_macro::TokenStream;
 
-use syn::Attribute;
-
 use crate::inject::{codegen_injectfns, INJECT_PREFIX};
 use crate::sig::{parse_sig, InjectFn};
 use crate::syn_ext::IdentExt;

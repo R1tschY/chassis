@@ -71,7 +71,7 @@ where
     Arc<U>: From<Arc<T>>,
 {
     fn load(&self, service_locator: &ServiceLocator) -> Arc<U> {
-        self.0.load(service_locator).into()
+        self.0.load(service_locator)
     }
 }
 

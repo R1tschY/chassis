@@ -5,7 +5,6 @@ extern crate assert_matches;
 #[macro_use]
 extern crate chassis_proc_macros;
 
-use std::any::{Any, TypeId};
 use std::sync::Arc;
 
 #[doc(hidden)]
@@ -17,7 +16,7 @@ pub use crate::module::Module;
 pub use crate::scope::Scope;
 pub use crate::service_locator::ServiceLocator;
 
-mod errors;
+// mod errors;
 mod factory;
 mod loader;
 mod module;
@@ -32,7 +31,7 @@ pub trait Provider<T: ?Sized + 'static> {
     fn get(&self) -> Arc<T>;
 }
 
-struct ProviderPtr<T: ?Sized + 'static>(Box<dyn Provider<T>>);
+pub struct ProviderPtr<T: ?Sized + 'static>(Box<dyn Provider<T>>);
 
 impl<T: ?Sized + 'static> ProviderPtr<T> {
     pub fn new(provider: impl Provider<T> + 'static) -> Self {

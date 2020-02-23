@@ -1,12 +1,10 @@
 use proc_macro::TokenStream;
 
-use syn::{Ident, Type};
-
 use crate::sig::{parse_sig, InjectFn};
 use crate::syn_ext::IdentExt;
 
-pub const INJECT_META_PREFIX: &'static str = "__injectmeta_";
-pub const INJECT_PREFIX: &'static str = "__inject_";
+pub const INJECT_META_PREFIX: &str = "__injectmeta_";
+pub const INJECT_PREFIX: &str = "__inject_";
 
 pub fn factory(input: TokenStream) -> TokenStream {
     let mut path: syn::Path = syn::parse(input).unwrap();
@@ -68,10 +66,9 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
         }
     };
 
-    let code = quote! {
+    quote! {
         #code_metafn
 
         #code_injectfn
-    };
-    code.into()
+    }
 }
