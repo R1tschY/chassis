@@ -1,17 +1,16 @@
-name: Rust
+name: Check + Test
 
 on: [push]
 
 jobs:
   build:
-    name: Clippy + rustfmt
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install nightly toolchain
+      - name: Setup nightly toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -19,24 +18,24 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Run cargo fmt
+      - name: Fmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-      - name: Run cargo clippy
+      - name: Clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: -- -D warnings
-          
-      - name: Build
+
+      - name: Check
         uses: actions-rs/cargo@v1
         with:
           command: check
           args: --release
-          
+
       - name: Test
         uses: actions-rs/cargo@v1
         with:
