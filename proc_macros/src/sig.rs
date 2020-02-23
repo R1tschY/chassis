@@ -12,18 +12,25 @@ pub struct InjectFn {
 }
 
 pub fn parse_sig(sig: &syn::Signature) -> InjectFn {
-    let inputs: Vec<_> = sig.inputs.iter().map(|input| {
-        let (ident, ty) = match input {
-            syn::FnArg::Typed(arg) => match *arg.pat {
-                syn::Pat::Ident(ref pat) => (Some(pat.ident.clone()), &arg.ty),
-                syn::Pat::Wild(_) => (None, &arg.ty),
-                _ => panic!("invalid use of pattern")
-            }
-            _ => unreachable!("only usable on functions"),
-        };
+    let inputs: Vec<_> = sig
+        .inputs
+        .iter()
+        .map(|input| {
+            let (ident, ty) = match input {
+                syn::FnArg::Typed(arg) => match *arg.pat {
+                    syn::Pat::Ident(ref pat) => (Some(pat.ident.clone()), &arg.ty),
+                    syn::Pat::Wild(_) => (None, &arg.ty),
+                    _ => panic!("invalid use of pattern"),
+                },
+                _ => unreachable!("only usable on functions"),
+            };
 
-        InjectFnArg { name: ident, ty: *ty.clone() }
-    }).collect();
+            InjectFnArg {
+                name: ident,
+                ty: *ty.clone(),
+            }
+        })
+        .collect();
 
     let rty: Type = match &sig.output {
         syn::ReturnType::Default => panic!("return type required"),
