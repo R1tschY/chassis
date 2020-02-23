@@ -1,16 +1,5 @@
-[package]
-name = "chassis"
-version = "0.1.0"
-authors = ["Richard Liebscher <r1tschy@posteo.de>"]
-edition = "2018"
-
-[dependencies]
-chassis-proc-macros = { path = "proc_macros" }
-
-[dev-dependencies]
-assert_matches = "1.3"
-
 [workspace]
 members = [
-    "proc_macros"
+    "proc_macros",
+    "lib",
 ]
