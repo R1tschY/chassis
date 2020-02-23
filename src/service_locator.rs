@@ -1,9 +1,10 @@
-use std::sync::Arc;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
+use std::sync::Arc;
+
 use crate::loader::Loader;
-use crate::{Provider, ProviderPtr, Module};
-use crate::resolve::{ResolveFrom};
+use crate::resolve::ResolveFrom;
+use crate::{Module, Provider, ProviderPtr};
 
 trait AnyLoader {
     fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any>;
@@ -18,12 +19,14 @@ impl<T: ?Sized + 'static> AnyLoader for AnyLoaderRef<T> {
 }
 
 pub struct ServiceLocator {
-    bindings: HashMap<TypeId, Box<dyn AnyLoader>>
+    bindings: HashMap<TypeId, Box<dyn AnyLoader>>,
 }
 
 impl ServiceLocator {
     pub fn new() -> Self {
-        Self { bindings: HashMap::new() }
+        Self {
+            bindings: HashMap::new(),
+        }
     }
 
     #[inline]
@@ -76,14 +79,15 @@ impl<'a, T: ?Sized + 'static> Provider<T> for &ServiceLocator {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fmt::Debug;
+
     use crate::loader::ExistingLoader;
 
-    trait Interface1 : Debug {
+    use super::*;
+
+    trait Interface1: Debug {
         fn do_something(&self);
     }
 
@@ -122,20 +126,19 @@ mod tests {
         assert_eq!(None, locator.resolve::<Impl1>());
     }
 
-
     /*    #[test]
-        fn it_works() {
-            //let x: *const dyn Interface1 = std::ptr::null();
-            let y: Trait<dyn Interface1> = Trait::new();
-            let x: &dyn AnyTrait = &y;
-            println!("{:?}", y.trait_type_id());
-            println!("{:?}", x.trait_type_id());
-            println!("{:?}", TypeId::of::<dyn Interface1>());
-            println!("{:?}", TypeId::of::<dyn Interface1>());
+    fn it_works() {
+        //let x: *const dyn Interface1 = std::ptr::null();
+        let y: Trait<dyn Interface1> = Trait::new();
+        let x: &dyn AnyTrait = &y;
+        println!("{:?}", y.trait_type_id());
+        println!("{:?}", x.trait_type_id());
+        println!("{:?}", TypeId::of::<dyn Interface1>());
+        println!("{:?}", TypeId::of::<dyn Interface1>());
 
-            let x: Box<Impl1> = Box::new(Impl1());
-            let y: Box<Interface1> = x;
+        let x: Box<Impl1> = Box::new(Impl1());
+        let y: Box<Interface1> = x;
 
-            assert_eq!(2 + 2, 5);
-        }*/
+        assert_eq!(2 + 2, 5);
+    }*/
 }

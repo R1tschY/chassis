@@ -1,14 +1,16 @@
-use crate::service_locator::ServiceLocator;
-use std::sync::Arc;
+use std::cell::RefCell;
 use std::marker::PhantomData;
-use std::cell::{RefCell};
+use std::sync::Arc;
 
+use crate::service_locator::ServiceLocator;
 
 pub trait Loader<T: ?Sized + 'static> {
     fn load(&self, service_locator: &ServiceLocator) -> Arc<T>;
 
     fn into_trait_loader<Trait: ?Sized + 'static>(self) -> AsTrait<Trait, T, Self>
-        where Self: Sized, T: Sized
+    where
+        Self: Sized,
+        T: Sized,
     {
         AsTrait(self, PhantomData, PhantomData)
     }
@@ -52,7 +54,11 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<T> for AsTrait<T, U, L> {
     }
 }*/
 
-pub struct AsTrait<T: ?Sized + 'static, U: 'static, L: Loader<U>>(L, PhantomData<U>, PhantomData<T>);
+pub struct AsTrait<T: ?Sized + 'static, U: 'static, L: Loader<U>>(
+    L,
+    PhantomData<U>,
+    PhantomData<T>,
+);
 
 impl<T: ?Sized + 'static, U, L: Loader<U>> AsTrait<T, U, L> {
     pub fn new(loader: L) -> Self {
@@ -60,25 +66,29 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> AsTrait<T, U, L> {
     }
 }
 
-impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<U> for AsTrait<T, U, L> where Arc<U>: From<Arc<T>> {
+impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<U> for AsTrait<T, U, L>
+where
+    Arc<U>: From<Arc<T>>,
+{
     fn load(&self, service_locator: &ServiceLocator) -> Arc<U> {
         self.0.load(service_locator).into()
     }
 }
 
-
 pub struct SingletonLoader<T: ?Sized + 'static> {
     loader: Box<dyn Loader<T>>,
-    cache: RefCell<Option<Arc<T>>>
+    cache: RefCell<Option<Arc<T>>>,
 }
 
 impl<T: ?Sized + 'static> Loader<T> for SingletonLoader<T> {
     fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
-        let mut ptr = self.cache.try_borrow_mut().expect("cyclic dependency detected");
+        let mut ptr = self
+            .cache
+            .try_borrow_mut()
+            .expect("cyclic dependency detected");
         Arc::clone(ptr.get_or_insert_with(|| self.loader.load(service_locator)))
     }
 }
-
 
 #[cfg(test)]
 mod tests {

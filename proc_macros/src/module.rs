@@ -1,13 +1,18 @@
 use proc_macro::TokenStream;
-use crate::sig::{parse_sig, InjectFn};
+
 use syn::Attribute;
+
 use crate::inject::{codegen_injectfns, INJECT_PREFIX};
+use crate::sig::{parse_sig, InjectFn};
 use crate::syn_ext::IdentExt;
 
 pub fn module(input: TokenStream) -> TokenStream {
     // parse
     let impl_block: syn::ItemImpl = syn::parse(input).unwrap();
-    assert!(impl_block.trait_.is_none(), "macro cannot applied to trait impl blocks");
+    assert!(
+        impl_block.trait_.is_none(),
+        "macro cannot applied to trait impl blocks"
+    );
 
     let name: &syn::Type = &impl_block.self_ty;
     let mut functions: Vec<InjectFn> = vec![];
@@ -21,13 +26,17 @@ pub fn module(input: TokenStream) -> TokenStream {
     }
 
     // codegen
-    let inject_fns: Vec<_> = functions.iter()
+    let inject_fns: Vec<_> = functions
+        .iter()
         .map(|function| codegen_injectfns(function, false))
         .collect();
-    let bindings: Vec<_> = functions.iter().map(|function| {
-        let inject_fn = function.name.prepend(INJECT_PREFIX);
-        quote! { __sl__.register(FactoryLoader::new(Self::#inject_fn)); }
-    }).collect();
+    let bindings: Vec<_> = functions
+        .iter()
+        .map(|function| {
+            let inject_fn = function.name.prepend(INJECT_PREFIX);
+            quote! { __sl__.register(FactoryLoader::new(Self::#inject_fn)); }
+        })
+        .collect();
 
     (quote! {
         #impl_block
@@ -41,5 +50,6 @@ pub fn module(input: TokenStream) -> TokenStream {
                 #(#bindings)*
             }
         }
-    }).into()
+    })
+    .into()
 }

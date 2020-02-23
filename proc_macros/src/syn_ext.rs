@@ -1,6 +1,5 @@
 use syn::Ident;
 
-
 pub trait IdentExt {
     fn prepend(&self, string: &str) -> Ident;
 }

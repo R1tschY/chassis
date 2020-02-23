@@ -1,12 +1,8 @@
-use chassis::{ServiceLocator, FactoryLoader};
+use chassis::{FactoryLoader, ServiceLocator};
 
-trait ProgressBar {
+trait ProgressBar {}
 
-}
-
-trait Copier {
-
-}
+trait Copier {}
 
 trait Converter {
     fn convert(&self, bytes: &[u8]) -> Vec<u8>;
@@ -16,7 +12,9 @@ struct Dummy();
 
 impl Dummy {
     //#[inject]
-    pub fn new() -> Self { Self() }
+    pub fn new() -> Self {
+        Self()
+    }
 }
 
 impl Converter for Dummy {

@@ -1,6 +1,6 @@
-use crate::{ServiceLocator, Provider, ProviderPtr};
 use std::sync::Arc;
 
+use crate::{Provider, ProviderPtr, ServiceLocator};
 
 pub trait ResolveFrom {
     fn resolve_from(_: &ServiceLocator) -> Self;

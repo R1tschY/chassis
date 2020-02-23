@@ -1,9 +1,9 @@
-use proc_macro::{TokenStream};
+use proc_macro::TokenStream;
 
 use syn::{Ident, Type};
 
-use crate::syn_ext::IdentExt;
 use crate::sig::{parse_sig, InjectFn};
+use crate::syn_ext::IdentExt;
 
 pub const INJECT_META_PREFIX: &'static str = "__injectmeta_";
 pub const INJECT_PREFIX: &'static str = "__inject_";
@@ -11,7 +11,10 @@ pub const INJECT_PREFIX: &'static str = "__inject_";
 pub fn factory(input: TokenStream) -> TokenStream {
     let mut path: syn::Path = syn::parse(input).unwrap();
 
-    let mut last_seg = path.segments.last_mut().expect("expected a path with at least one segment");
+    let mut last_seg = path
+        .segments
+        .last_mut()
+        .expect("expected a path with at least one segment");
     last_seg.ident = last_seg.ident.prepend(INJECT_PREFIX);
 
     (quote! { #path }).into()

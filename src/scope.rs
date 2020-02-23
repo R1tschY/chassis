@@ -1,4 +1,4 @@
-use std::any::{TypeId, Any};
+use std::any::{Any, TypeId};
 use std::sync::Arc;
 
 pub trait Scope {

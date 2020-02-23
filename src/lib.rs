@@ -1,26 +1,29 @@
-#[cfg(test)] #[macro_use]
+#[cfg(test)]
+#[macro_use]
 extern crate assert_matches;
+#[allow(unused_imports)]
+#[macro_use]
+extern crate chassis_proc_macros;
 
-#[allow(unused_imports)] #[macro_use] extern crate chassis_proc_macros;
-#[doc(hidden)] pub use chassis_proc_macros::*;
+use std::any::{Any, TypeId};
+use std::sync::Arc;
+
+#[doc(hidden)]
+pub use chassis_proc_macros::*;
 
 pub use crate::loader::ExistingLoader;
 pub use crate::loader::FactoryLoader;
-pub use crate::service_locator::ServiceLocator;
 pub use crate::module::Module;
 pub use crate::scope::Scope;
-use std::sync::Arc;
-use std::any::{Any, TypeId};
+pub use crate::service_locator::ServiceLocator;
 
-
+mod errors;
 mod factory;
 mod loader;
-mod service_locator;
-mod resolve;
 mod module;
+mod resolve;
 mod scope;
-mod errors;
-
+mod service_locator;
 
 /// JSR-330-like Provider interface
 ///

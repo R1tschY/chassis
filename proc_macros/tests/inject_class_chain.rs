@@ -1,18 +1,23 @@
 #![feature(proc_macro_hygiene)]
 
-#[macro_use] extern crate chassis;
-#[macro_use] extern crate assert_matches;
+#[macro_use]
+extern crate assert_matches;
+#[macro_use]
+extern crate chassis;
 
-use chassis::ServiceLocator;
-use chassis::FactoryLoader;
 use std::sync::Arc;
+
+use chassis::FactoryLoader;
+use chassis::ServiceLocator;
 
 #[derive(Debug)]
 struct Class1();
 
 impl Class1 {
     #[inject]
-    pub fn new() -> Self { Self() }
+    pub fn new() -> Self {
+        Self()
+    }
 }
 
 #[derive(Debug)]
@@ -20,7 +25,9 @@ struct Class2();
 
 impl Class2 {
     #[inject]
-    pub fn new(_x: Arc<Class1>) -> Self { Self() }
+    pub fn new(_x: Arc<Class1>) -> Self {
+        Self()
+    }
 }
 
 #[derive(Debug)]

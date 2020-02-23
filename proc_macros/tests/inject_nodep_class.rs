@@ -1,19 +1,24 @@
 // #![feature(trace_macros)]
 // trace_macros!(true);
 
-#[macro_use] extern crate chassis;
-#[macro_use] extern crate assert_matches;
+#[macro_use]
+extern crate assert_matches;
+#[macro_use]
+extern crate chassis;
 
-use chassis::ServiceLocator;
-use chassis::FactoryLoader;
 use std::any::TypeId;
+
+use chassis::FactoryLoader;
+use chassis::ServiceLocator;
 
 #[derive(Debug)]
 struct Dummy();
 
 impl Dummy {
     #[inject]
-    pub fn new() -> Self { Self() }
+    pub fn new() -> Self {
+        Self()
+    }
 }
 
 #[test]
