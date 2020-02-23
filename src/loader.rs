@@ -32,6 +32,12 @@ impl<T: ?Sized + 'static> Loader<T> for ExistingLoader<T> {
 
 pub struct FactoryLoader<T: 'static>(pub Box<dyn Fn(&ServiceLocator) -> T>);
 
+impl<T: 'static> FactoryLoader<T> {
+    pub fn new(function: impl Fn(&ServiceLocator) -> T + 'static) -> Self {
+        Self(Box::new(function))
+    }
+}
+
 impl<T: 'static> Loader<T> for FactoryLoader<T> {
     fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
         Arc::new(self.0(service_locator))

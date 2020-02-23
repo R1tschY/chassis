@@ -12,6 +12,7 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0", features = ["full"] }
 quote = "1.0"
+proc-macro2 = "*"
 
 [dev-dependencies]
 chassis = { path = ".." }

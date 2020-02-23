@@ -7,6 +7,8 @@ extern crate assert_matches;
 pub use crate::loader::ExistingLoader;
 pub use crate::loader::FactoryLoader;
 pub use crate::service_locator::ServiceLocator;
+pub use crate::module::Module;
+pub use crate::scope::Scope;
 use std::sync::Arc;
 use std::any::{Any, TypeId};
 
@@ -15,6 +17,9 @@ mod factory;
 mod loader;
 mod service_locator;
 mod resolve;
+mod module;
+mod scope;
+mod errors;
 
 
 /// JSR-330-like Provider interface
@@ -38,19 +43,4 @@ impl<T: ?Sized + 'static> std::ops::Deref for ProviderPtr<T> {
     fn deref(&self) -> &Self::Target {
         self.0.deref()
     }
-}
-
-
-trait Scope {
-    fn get(&self, tp: TypeId) -> Option<Box<dyn Any>>;
-
-    fn resolve<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
-        self.get(TypeId::of::<T>())
-            .map(|any| *any.downcast::<Arc<T>>().unwrap())
-    }
-
-    // fn resolve_to<T: ?Sized + 'static, R: ResolveTo<T>>(&self) -> R {
-    //     self.get(TypeId::of::<T>())
-    //         .map(|any| R::resolve(*any.downcast::<Arc<T>>().unwrap()))
-    // }
 }

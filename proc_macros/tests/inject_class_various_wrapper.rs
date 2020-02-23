@@ -1,6 +1,3 @@
-// #![feature(trace_macros)]
-// trace_macros!(true);
-
 #[macro_use] extern crate chassis;
 #[macro_use] extern crate assert_matches;
 

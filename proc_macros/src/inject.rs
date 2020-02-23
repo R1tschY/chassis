@@ -3,21 +3,10 @@ use proc_macro::{TokenStream};
 use syn::{Ident, Type};
 
 use crate::syn_ext::IdentExt;
+use crate::sig::{parse_sig, InjectFn};
 
-const INJECT_META_PREFIX: &'static str = "__injectmeta_";
-const INJECT_PREFIX: &'static str = "__inject_";
-
-struct InjectFnArg {
-    name: Option<Ident>,
-    ty: Type,
-}
-
-struct InjectFn {
-    function: syn::ItemFn,
-    name: Ident,
-    inputs: Vec<InjectFnArg>,
-    output: Type,
-}
+pub const INJECT_META_PREFIX: &'static str = "__injectmeta_";
+pub const INJECT_PREFIX: &'static str = "__inject_";
 
 pub fn factory(input: TokenStream) -> TokenStream {
     let mut path: syn::Path = syn::parse(input).unwrap();
@@ -29,44 +18,25 @@ pub fn factory(input: TokenStream) -> TokenStream {
 }
 
 pub fn inject(input: TokenStream) -> TokenStream {
-    let function: syn::ItemFn = syn::parse(input).unwrap();
-    codegen_classfn(parse_sig(function))
+    let function: syn::ImplItemMethod = syn::parse(input).unwrap();
+    codegen_classfn(&function, parse_sig(&function.sig))
 }
 
-fn parse_sig(function: syn::ItemFn) -> InjectFn {
-    let inputs: Vec<_> = function.sig.inputs.iter().map(|input| {
-        let (ident, ty) = match input {
-            syn::FnArg::Typed(arg) => match *arg.pat {
-                syn::Pat::Ident(ref pat) => (Some(pat.ident.clone()), &arg.ty),
-                syn::Pat::Wild(_) => (None, &arg.ty),
-                _ => panic!("invalid use of pattern")
-            }
-            _ => unreachable!("only usable on functions"),
-        };
+fn codegen_classfn(userfn: &syn::ImplItemMethod, sig: InjectFn) -> TokenStream {
+    let injectfns = codegen_injectfns(&sig, true);
 
-        InjectFnArg { name: ident, ty: *ty.clone() }
-    }).collect();
+    let code = quote! {
+        #userfn
 
-    let rty: Type = match &function.sig.output {
-        syn::ReturnType::Default => panic!("return type required"),
-        syn::ReturnType::Type(_, ty) => (ty as &Type).clone(),
+        #injectfns
     };
-
-    InjectFn {
-        name: function.sig.ident.clone(),
-        inputs,
-        output: rty,
-        function,
-    }
+    code.into()
 }
 
-fn codegen_classfn(sig: InjectFn) -> TokenStream {
-    let userfn = &sig.function;
-    let _rty = &sig.output;
-
+pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::TokenStream {
     let userfn_name = &sig.name;
-    let metafn_name = userfn_name.prepend(INJECT_META_PREFIX);
     let injectfn_name = userfn_name.prepend(INJECT_PREFIX);
+    let metafn_name = userfn_name.prepend(INJECT_META_PREFIX);
 
     let resolves = sig.inputs.iter().map(|input| {
         let ty = &input.ty;
@@ -74,16 +44,31 @@ fn codegen_classfn(sig: InjectFn) -> TokenStream {
         quote! { __sl__.resolve_to::<#ty>() }
     });
 
-    let code = quote! {
-        #userfn
-
+    let code_metafn = quote! {
         pub fn #metafn_name() -> (String, std::any::TypeId) {
             ("<no name>".to_string(), std::any::TypeId::of::<Self>())
         }
+    };
 
-        pub fn #injectfn_name(__sl__: &chassis::ServiceLocator) -> Self {
-            Self::#userfn_name(#(#resolves),*)
+    let code_injectfn = if return_self {
+        quote! {
+            pub fn #injectfn_name(__sl__: &chassis::ServiceLocator) -> Self {
+                Self::#userfn_name(#(#resolves),*)
+            }
         }
+    } else {
+        let rty = &sig.output;
+        quote! {
+            pub fn #injectfn_name(__sl__: &chassis::ServiceLocator) -> #rty {
+                Self::#userfn_name(#(#resolves),*)
+            }
+        }
+    };
+
+    let code = quote! {
+        #code_metafn
+
+        #code_injectfn
     };
     code.into()
 }

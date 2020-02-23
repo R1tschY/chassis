@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene)]
-
 #[macro_use] extern crate chassis;
 #[macro_use] extern crate assert_matches;
 
@@ -11,7 +9,6 @@ use std::sync::Arc;
 struct Class1();
 
 impl Class1 {
-    #[inject]
     pub fn new() -> Self { Self() }
 }
 
@@ -19,7 +16,6 @@ impl Class1 {
 struct Class2();
 
 impl Class2 {
-    #[inject]
     pub fn new(_x: Arc<Class1>) -> Self { Self() }
 }
 
@@ -27,18 +23,24 @@ impl Class2 {
 struct Class3();
 
 impl Class3 {
-    #[inject]
     pub fn new(_x: Arc<Class2>) -> Self {
         Self()
     }
 }
 
+struct Module();
+
+#[module]
+impl Module {
+    pub fn class1() -> Class1 { Class1::new() }
+    pub fn class2(x: Arc<Class1>) -> Class2 { Class2::new(x) }
+    pub fn class3(x: Arc<Class2>) -> Class3 { Class3::new(x) }
+}
+
 #[test]
 fn inject_function_resolve() {
     let mut sl = ServiceLocator::new();
-    sl.register(FactoryLoader(Box::new(factory!(Class1::new))));
-    sl.register(FactoryLoader(Box::new(factory!(Class2::new))));
-    sl.register(FactoryLoader(Box::new(factory!(Class3::new))));
+    sl.install(&Module());
 
     assert!(sl.contains::<Class3>());
     assert_matches!(sl.resolve::<Class3>(), Some(_))

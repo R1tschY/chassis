@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use crate::loader::Loader;
-use crate::{Provider, ProviderPtr};
+use crate::{Provider, ProviderPtr, Module};
 use crate::resolve::{ResolveFrom};
 
 trait AnyLoader {
@@ -55,6 +55,11 @@ impl ServiceLocator {
 
     fn register_any(&mut self, id: TypeId, loader: Box<dyn AnyLoader>) {
         self.bindings.insert(id, loader);
+    }
+
+    #[inline]
+    pub fn install(&mut self, module: &impl Module) {
+        module.configure(self)
     }
 
     // #[inline]

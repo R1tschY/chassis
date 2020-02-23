@@ -1,4 +1,5 @@
 extern crate proc_macro;
+extern crate proc_macro2;
 #[macro_use] extern crate quote;
 extern crate syn;
 
@@ -7,6 +8,8 @@ use proc_macro::TokenStream;
 mod syn_ext;
 
 mod inject;
+mod module;
+mod sig;
 
 
 #[proc_macro]
@@ -17,4 +20,9 @@ pub fn factory(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn inject(_args: TokenStream, input: TokenStream) -> TokenStream {
     crate::inject::inject(input)
+}
+
+#[proc_macro_attribute]
+pub fn module(_args: TokenStream, input: TokenStream) -> TokenStream {
+    crate::module::module(input)
 }
