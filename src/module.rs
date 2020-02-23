@@ -1,5 +1,5 @@
 use crate::ServiceLocator;
 
 pub trait Module {
-    fn configure(&self, sl: &mut ServiceLocator) -> ();
+    fn configure(&self, sl: &mut ServiceLocator);
 }
