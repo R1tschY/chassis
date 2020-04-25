@@ -8,8 +8,8 @@ extern crate chassis;
 
 use std::any::TypeId;
 
-use chassis::FactoryLoader;
-use chassis::Injector;
+use chassis::{Binder, Injector};
+use chassis::{CreatingFactory, Module};
 
 #[derive(Debug)]
 struct Dummy();
@@ -21,12 +21,19 @@ impl Dummy {
     }
 }
 
+struct TestModule;
+
+impl Module for TestModule {
+    fn configure(&self, binder: &mut Binder) {
+        binder.bind(CreatingFactory(Box::new(Dummy::__inject_new)));
+    }
+}
+
 #[test]
 fn inject_function_resolve() {
-    let mut sl = Injector::new();
-    sl.register(FactoryLoader(Box::new(Dummy::__inject_new)));
+    let injector = Injector::builder().module(TestModule).build();
 
-    assert_matches!(sl.resolve::<Dummy>(), Some(_));
+    assert_matches!(injector.resolve::<Dummy>(), Some(_));
 }
 
 #[test]

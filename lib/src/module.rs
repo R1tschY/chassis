@@ -1,5 +1,5 @@
-use crate::Injector;
+use crate::binder::Binder;
 
 pub trait Module {
-    fn configure(&self, sl: &mut Injector);
+    fn configure(&self, binder: &mut Binder);
 }

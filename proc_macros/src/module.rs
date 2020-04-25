@@ -32,7 +32,7 @@ pub fn module(input: TokenStream) -> TokenStream {
         .iter()
         .map(|function| {
             let inject_fn = function.name.prepend(INJECT_PREFIX);
-            quote! { __sl__.register(FactoryLoader::new(Self::#inject_fn)); }
+            quote! { __binder__.bind(chassis::CreatingFactory::new(Self::#inject_fn)); }
         })
         .collect();
 
@@ -44,7 +44,7 @@ pub fn module(input: TokenStream) -> TokenStream {
         }
 
         impl chassis::Module for #name {
-            fn configure(&self, __sl__: &mut chassis::Injector) {
+            fn configure(&self, __binder__: &mut chassis::Binder) {
                 #(#bindings)*
             }
         }

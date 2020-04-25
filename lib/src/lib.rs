@@ -10,16 +10,19 @@ use std::sync::Arc;
 #[doc(hidden)]
 pub use chassis_proc_macros::*;
 
+pub use crate::binder::Binder;
+pub use crate::factory::CreatingFactory;
+pub use crate::factory::ExistingFactory;
+pub(crate) use crate::factory::{AnyFactory, AnyFactoryRef};
 pub use crate::injector::Injector;
-pub use crate::loader::ExistingLoader;
-pub use crate::loader::FactoryLoader;
 pub use crate::module::Module;
 pub use crate::scope::Scope;
 
-// mod errors;
-mod factory;
 mod injector;
-mod loader;
+
+mod binder;
+mod errors;
+mod factory;
 mod module;
 mod resolve;
 mod scope;

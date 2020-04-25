@@ -1,4 +1,4 @@
-use chassis::{FactoryLoader, Injector};
+use chassis::{Binder, CreatingFactory, Injector, Module};
 
 trait ProgressBar {}
 
@@ -23,9 +23,16 @@ impl Converter for Dummy {
     }
 }
 
-fn main() {
-    let mut sl = Injector::new();
-    sl.register(FactoryLoader(Box::new(|_sl| Dummy::new())));
+struct DDModule;
 
-    sl.resolve::<Dummy>().unwrap().convert(&[1, 2, 3]);
+impl Module for DDModule {
+    fn configure(&self, binder: &mut Binder) {
+        binder.bind(CreatingFactory(Box::new(|_sl| Dummy::new())));
+    }
+}
+
+fn main() {
+    let injector = Injector::builder().module(DDModule).build();
+
+    injector.resolve::<Dummy>().unwrap().convert(&[1, 2, 3]);
 }

@@ -5,7 +5,7 @@ extern crate chassis;
 
 use std::sync::Arc;
 
-use chassis::FactoryLoader;
+use chassis::CreatingFactory;
 use chassis::Injector;
 
 #[derive(Debug)]
@@ -52,9 +52,8 @@ impl Module {
 
 #[test]
 fn inject_function_resolve() {
-    let mut sl = Injector::new();
-    sl.install(&Module());
+    let mut injector = Injector::builder().module(Module()).build();
 
-    assert!(sl.contains::<Class3>());
-    assert_matches!(sl.resolve::<Class3>(), Some(_))
+    assert!(injector.contains::<Class3>());
+    assert_matches!(injector.resolve::<Class3>(), Some(_))
 }

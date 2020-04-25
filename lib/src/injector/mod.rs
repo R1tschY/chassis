@@ -2,37 +2,38 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::loader::Loader;
+use crate::binder::Binder;
+use crate::injector::builder::InjectorBuilder;
 use crate::resolve::ResolveFrom;
-use crate::{Module, Provider};
+use crate::{AnyFactory, Provider};
 
-trait AnyLoader {
-    fn load(&self, service_locator: &Injector) -> Box<dyn Any>;
-}
+pub mod builder;
+pub mod context;
 
-struct AnyLoaderRef<T: ?Sized + 'static>(Arc<dyn Loader<T>>);
-
-impl<T: ?Sized + 'static> AnyLoader for AnyLoaderRef<T> {
-    fn load(&self, service_locator: &Injector) -> Box<dyn Any> {
-        Box::new(self.0.load(service_locator))
-    }
-}
-
-#[derive(Default)]
+/// Holds factories of all registered types.
 pub struct Injector {
-    bindings: HashMap<TypeId, Box<dyn AnyLoader>>,
+    bindings: HashMap<TypeId, Box<dyn AnyFactory>>,
 }
 
 impl Injector {
-    pub fn new() -> Self {
+    /// for tests only
+    pub(crate) fn from_binder(binder: Binder) -> Self {
         Self {
-            bindings: HashMap::new(),
+            bindings: binder.build_bindings(),
         }
+    }
+
+    pub fn builder() -> InjectorBuilder {
+        InjectorBuilder::default()
     }
 
     #[inline]
     pub fn contains<T: ?Sized + 'static>(&self) -> bool {
-        self.contains_loader(TypeId::of::<T>())
+        self.contains_factory(TypeId::of::<T>())
+    }
+
+    fn contains_factory(&self, id: TypeId) -> bool {
+        self.bindings.contains_key(&id)
     }
 
     pub fn resolve<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
@@ -40,30 +41,13 @@ impl Injector {
             .map(|any| *any.downcast::<Arc<T>>().unwrap())
     }
 
+    fn resolve_any(&self, id: TypeId) -> Option<Box<dyn Any>> {
+        self.bindings.get(&id).map(|factory| factory.load(self))
+    }
+
     #[inline]
     pub fn resolve_to<T: ResolveFrom>(&self) -> T {
         T::resolve_from(self)
-    }
-
-    fn contains_loader(&self, id: TypeId) -> bool {
-        self.bindings.contains_key(&id)
-    }
-
-    fn resolve_any(&self, id: TypeId) -> Option<Box<dyn Any>> {
-        self.bindings.get(&id).map(|loader| loader.load(self))
-    }
-
-    pub fn register<T: ?Sized + 'static, U: Loader<T> + 'static>(&mut self, loader: U) {
-        self.register_any(TypeId::of::<T>(), Box::new(AnyLoaderRef(Arc::new(loader))));
-    }
-
-    fn register_any(&mut self, id: TypeId, loader: Box<dyn AnyLoader>) {
-        self.bindings.insert(id, loader);
-    }
-
-    #[inline]
-    pub fn install(&mut self, module: &impl Module) {
-        module.configure(self)
     }
 
     // #[inline]
@@ -84,7 +68,7 @@ impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
 mod tests {
     use std::fmt::Debug;
 
-    use crate::loader::ExistingLoader;
+    use crate::factory::ExistingFactory;
 
     use super::*;
 
@@ -106,23 +90,28 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_struct() {
-        let mut locator = Injector::new();
-        locator.register(ExistingLoader(Arc::new(Impl1())));
+        let mut binder = Binder::new();
+        binder.bind(ExistingFactory(Arc::new(Impl1())));
+        let mut locator = Injector::from_binder(binder);
+
         assert_eq!(Some(Arc::new(Impl1())), locator.resolve::<Impl1>());
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
     }
 
     #[test]
     fn test_resolve_existing_interface() {
-        let mut locator = Injector::new();
-        locator.register(ExistingLoader::<dyn Interface1>(Arc::new(Impl1())));
+        let mut binder = Binder::new();
+        binder.bind(ExistingFactory::<dyn Interface1>(Arc::new(Impl1())));
+        let mut locator = Injector::from_binder(binder);
+
         assert_matches!(locator.resolve::<dyn Interface1>(), Some(_));
         assert_eq!(None, locator.resolve::<Impl1>());
     }
 
     #[test]
     fn test_resolve_nonexisting() {
-        let locator = Injector::new();
+        let mut locator = Injector::from_binder(Binder::new());
+
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
         assert_eq!(None, locator.resolve::<Impl1>());
     }

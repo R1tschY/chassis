@@ -5,8 +5,8 @@ extern crate chassis;
 
 use std::sync::Arc;
 
-use chassis::FactoryLoader;
-use chassis::Injector;
+use chassis::{Binder, Injector};
+use chassis::{CreatingFactory, Module};
 
 #[derive(Debug, Clone)]
 struct Class1();
@@ -28,12 +28,19 @@ impl Class2 {
     }
 }
 
+struct TestModule;
+
+impl Module for TestModule {
+    fn configure(&self, binder: &mut Binder) {
+        binder.bind(CreatingFactory(Box::new(Class1::__inject_new)));
+        binder.bind(CreatingFactory(Box::new(Class2::__inject_new)));
+    }
+}
+
 #[test]
 fn inject_function_resolve() {
-    let mut sl = Injector::new();
-    sl.register(FactoryLoader(Box::new(Class1::__inject_new)));
-    sl.register(FactoryLoader(Box::new(Class2::__inject_new)));
+    let injector = Injector::builder().module(TestModule).build();
 
-    assert!(sl.contains::<Class2>());
-    assert_matches!(sl.resolve::<Class2>(), Some(_))
+    assert!(injector.contains::<Class2>());
+    assert_matches!(injector.resolve::<Class2>(), Some(_))
 }
