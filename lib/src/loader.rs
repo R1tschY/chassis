@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::service_locator::ServiceLocator;
+use crate::injector::Injector;
 
 pub trait Loader<T: ?Sized + 'static> {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T>;
+    fn load(&self, service_locator: &Injector) -> Arc<T>;
 
     fn into_trait_loader<Trait: ?Sized + 'static>(self) -> AsTrait<Trait, T, Self>
     where
@@ -27,21 +27,21 @@ pub trait Loader<T: ?Sized + 'static> {
 pub struct ExistingLoader<T: ?Sized + 'static>(pub Arc<T>);
 
 impl<T: ?Sized + 'static> Loader<T> for ExistingLoader<T> {
-    fn load(&self, _service_locator: &ServiceLocator) -> Arc<T> {
+    fn load(&self, _service_locator: &Injector) -> Arc<T> {
         Arc::clone(&self.0)
     }
 }
 
-pub struct FactoryLoader<T: 'static>(pub Box<dyn Fn(&ServiceLocator) -> T>);
+pub struct FactoryLoader<T: 'static>(pub Box<dyn Fn(&Injector) -> T>);
 
 impl<T: 'static> FactoryLoader<T> {
-    pub fn new(function: impl Fn(&ServiceLocator) -> T + 'static) -> Self {
+    pub fn new(function: impl Fn(&Injector) -> T + 'static) -> Self {
         Self(Box::new(function))
     }
 }
 
 impl<T: 'static> Loader<T> for FactoryLoader<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
+    fn load(&self, service_locator: &Injector) -> Arc<T> {
         Arc::new(self.0(service_locator))
     }
 }
@@ -49,7 +49,7 @@ impl<T: 'static> Loader<T> for FactoryLoader<T> {
 /*pub struct AsTrait<T: ?Sized + 'static, U: T + 'static, L: Loader<U>>(L, PhantomData<T>);
 
 impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<T> for AsTrait<T, U, L> {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
+    fn load(&self, service_locator: &Injector) -> Arc<T> {
         self.0.load(service_locator).into()
     }
 }*/
@@ -70,7 +70,7 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<U> for AsTrait<T, U, L>
 where
     Arc<U>: From<Arc<T>>,
 {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<U> {
+    fn load(&self, service_locator: &Injector) -> Arc<U> {
         self.0.load(service_locator)
     }
 }
@@ -81,7 +81,7 @@ pub struct SingletonLoader<T: ?Sized + 'static> {
 }
 
 impl<T: ?Sized + 'static> Loader<T> for SingletonLoader<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> Arc<T> {
+    fn load(&self, service_locator: &Injector) -> Arc<T> {
         let mut ptr = self
             .cache
             .try_borrow_mut()

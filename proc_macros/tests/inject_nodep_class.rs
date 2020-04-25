@@ -9,7 +9,7 @@ extern crate chassis;
 use std::any::TypeId;
 
 use chassis::FactoryLoader;
-use chassis::ServiceLocator;
+use chassis::Injector;
 
 #[derive(Debug)]
 struct Dummy();
@@ -23,7 +23,7 @@ impl Dummy {
 
 #[test]
 fn inject_function_resolve() {
-    let mut sl = ServiceLocator::new();
+    let mut sl = Injector::new();
     sl.register(FactoryLoader(Box::new(Dummy::__inject_new)));
 
     assert_matches!(sl.resolve::<Dummy>(), Some(_));

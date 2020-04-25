@@ -44,7 +44,7 @@ pub fn module(input: TokenStream) -> TokenStream {
         }
 
         impl chassis::Module for #name {
-            fn configure(&self, __sl__: &mut ServiceLocator) {
+            fn configure(&self, __sl__: &mut chassis::Injector) {
                 #(#bindings)*
             }
         }

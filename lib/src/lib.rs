@@ -10,19 +10,19 @@ use std::sync::Arc;
 #[doc(hidden)]
 pub use chassis_proc_macros::*;
 
+pub use crate::injector::Injector;
 pub use crate::loader::ExistingLoader;
 pub use crate::loader::FactoryLoader;
 pub use crate::module::Module;
 pub use crate::scope::Scope;
-pub use crate::service_locator::ServiceLocator;
 
 // mod errors;
 mod factory;
+mod injector;
 mod loader;
 mod module;
 mod resolve;
 mod scope;
-mod service_locator;
 
 /// JSR-330-like Provider interface
 ///

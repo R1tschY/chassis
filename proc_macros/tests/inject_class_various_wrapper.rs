@@ -6,7 +6,7 @@ extern crate chassis;
 use std::sync::Arc;
 
 use chassis::FactoryLoader;
-use chassis::ServiceLocator;
+use chassis::Injector;
 
 #[derive(Debug, Clone)]
 struct Class1();
@@ -30,7 +30,7 @@ impl Class2 {
 
 #[test]
 fn inject_function_resolve() {
-    let mut sl = ServiceLocator::new();
+    let mut sl = Injector::new();
     sl.register(FactoryLoader(Box::new(Class1::__inject_new)));
     sl.register(FactoryLoader(Box::new(Class2::__inject_new)));
 

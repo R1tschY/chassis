@@ -6,7 +6,7 @@ extern crate chassis;
 use std::sync::Arc;
 
 use chassis::FactoryLoader;
-use chassis::ServiceLocator;
+use chassis::Injector;
 
 #[derive(Debug)]
 struct Class1();
@@ -52,7 +52,7 @@ impl Module {
 
 #[test]
 fn inject_function_resolve() {
-    let mut sl = ServiceLocator::new();
+    let mut sl = Injector::new();
     sl.install(&Module());
 
     assert!(sl.contains::<Class3>());

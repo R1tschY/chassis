@@ -7,23 +7,23 @@ use crate::resolve::ResolveFrom;
 use crate::{Module, Provider};
 
 trait AnyLoader {
-    fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any>;
+    fn load(&self, service_locator: &Injector) -> Box<dyn Any>;
 }
 
 struct AnyLoaderRef<T: ?Sized + 'static>(Arc<dyn Loader<T>>);
 
 impl<T: ?Sized + 'static> AnyLoader for AnyLoaderRef<T> {
-    fn load(&self, service_locator: &ServiceLocator) -> Box<dyn Any> {
+    fn load(&self, service_locator: &Injector) -> Box<dyn Any> {
         Box::new(self.0.load(service_locator))
     }
 }
 
 #[derive(Default)]
-pub struct ServiceLocator {
+pub struct Injector {
     bindings: HashMap<TypeId, Box<dyn AnyLoader>>,
 }
 
-impl ServiceLocator {
+impl Injector {
     pub fn new() -> Self {
         Self {
             bindings: HashMap::new(),
@@ -73,8 +73,8 @@ impl ServiceLocator {
     // }
 }
 
-// TODO: check if T is in ServiceLocator before creating a Provider
-impl<'a, T: ?Sized + 'static> Provider<T> for &ServiceLocator {
+// TODO: check if T is in Injector before creating a Provider
+impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
     fn get(&self) -> Arc<T> {
         self.resolve::<T>().unwrap()
     }
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_struct() {
-        let mut locator = ServiceLocator::new();
+        let mut locator = Injector::new();
         locator.register(ExistingLoader(Arc::new(Impl1())));
         assert_eq!(Some(Arc::new(Impl1())), locator.resolve::<Impl1>());
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_interface() {
-        let mut locator = ServiceLocator::new();
+        let mut locator = Injector::new();
         locator.register(ExistingLoader::<dyn Interface1>(Arc::new(Impl1())));
         assert_matches!(locator.resolve::<dyn Interface1>(), Some(_));
         assert_eq!(None, locator.resolve::<Impl1>());
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_resolve_nonexisting() {
-        let locator = ServiceLocator::new();
+        let locator = Injector::new();
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
         assert_eq!(None, locator.resolve::<Impl1>());
     }

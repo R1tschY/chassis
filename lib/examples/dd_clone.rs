@@ -1,4 +1,4 @@
-use chassis::{FactoryLoader, ServiceLocator};
+use chassis::{FactoryLoader, Injector};
 
 trait ProgressBar {}
 
@@ -24,7 +24,7 @@ impl Converter for Dummy {
 }
 
 fn main() {
-    let mut sl = ServiceLocator::new();
+    let mut sl = Injector::new();
     sl.register(FactoryLoader(Box::new(|_sl| Dummy::new())));
 
     sl.resolve::<Dummy>().unwrap().convert(&[1, 2, 3]);

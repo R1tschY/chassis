@@ -1,5 +1,5 @@
-use crate::service_locator::ServiceLocator;
+use crate::injector::Injector;
 
 pub trait Factory<T: 'static> {
-    fn create(service_locator: &ServiceLocator) -> T;
+    fn create(service_locator: &Injector) -> T;
 }

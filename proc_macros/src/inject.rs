@@ -53,14 +53,14 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
 
     let code_injectfn = if return_self {
         quote! {
-            pub fn #injectfn_name(__sl__: &chassis::ServiceLocator) -> Self {
+            pub fn #injectfn_name(__sl__: &chassis::Injector) -> Self {
                 Self::#userfn_name(#(#resolves),*)
             }
         }
     } else {
         let rty = &sig.output;
         quote! {
-            pub fn #injectfn_name(__sl__: &chassis::ServiceLocator) -> #rty {
+            pub fn #injectfn_name(__sl__: &chassis::Injector) -> #rty {
                 Self::#userfn_name(#(#resolves),*)
             }
         }
