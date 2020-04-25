@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::factory::Factory;
 use crate::{AnyFactory, AnyFactoryRef, Module};
 
-#[derive(Hash)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Key(TypeId);
 
 impl Key {
@@ -14,7 +14,7 @@ impl Key {
 }
 
 pub struct Binder {
-    bindings: HashMap<TypeId, Box<dyn AnyFactory>>,
+    bindings: HashMap<Key, Box<dyn AnyFactory>>,
 }
 
 impl Binder {
@@ -26,11 +26,11 @@ impl Binder {
 
     /// Register factory
     pub fn bind<T: ?Sized + 'static, U: Factory<T> + 'static>(&mut self, factory: U) {
-        self.bind_any(TypeId::of::<T>(), Box::new(AnyFactoryRef::new(factory)));
+        self.bind_any(Key::for_type::<T>(), Box::new(AnyFactoryRef::new(factory)));
     }
 
-    fn bind_any(&mut self, id: TypeId, loader: Box<dyn AnyFactory>) {
-        self.bindings.insert(id, loader);
+    fn bind_any(&mut self, key: Key, loader: Box<dyn AnyFactory>) {
+        self.bindings.insert(key, loader);
     }
 
     /// Install a Module
@@ -39,7 +39,7 @@ impl Binder {
         module.configure(self)
     }
 
-    pub(crate) fn build_bindings(self) -> HashMap<TypeId, Box<dyn AnyFactory>> {
+    pub(crate) fn build_bindings(self) -> HashMap<Key, Box<dyn AnyFactory>> {
         self.bindings
     }
 }

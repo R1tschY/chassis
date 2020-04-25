@@ -52,7 +52,7 @@ impl Module {
 
 #[test]
 fn inject_function_resolve() {
-    let mut injector = Injector::builder().module(Module()).build();
+    let injector = Injector::builder().module(Module()).build();
 
     assert!(injector.contains::<Class3>());
     assert_matches!(injector.resolve::<Class3>(), Some(_))

@@ -1,8 +1,8 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::binder::Binder;
+use crate::binder::{Binder, Key};
 use crate::injector::builder::InjectorBuilder;
 use crate::resolve::ResolveFrom;
 use crate::{AnyFactory, Provider};
@@ -12,7 +12,7 @@ pub mod context;
 
 /// Holds factories of all registered types.
 pub struct Injector {
-    bindings: HashMap<TypeId, Box<dyn AnyFactory>>,
+    bindings: HashMap<Key, Box<dyn AnyFactory>>,
 }
 
 impl Injector {
@@ -29,20 +29,20 @@ impl Injector {
 
     #[inline]
     pub fn contains<T: ?Sized + 'static>(&self) -> bool {
-        self.contains_factory(TypeId::of::<T>())
+        self.contains_factory(Key::for_type::<T>())
     }
 
-    fn contains_factory(&self, id: TypeId) -> bool {
-        self.bindings.contains_key(&id)
+    fn contains_factory(&self, key: Key) -> bool {
+        self.bindings.contains_key(&key)
     }
 
     pub fn resolve<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
-        self.resolve_any(TypeId::of::<T>())
+        self.resolve_any(Key::for_type::<T>())
             .map(|any| *any.downcast::<Arc<T>>().unwrap())
     }
 
-    fn resolve_any(&self, id: TypeId) -> Option<Box<dyn Any>> {
-        self.bindings.get(&id).map(|factory| factory.load(self))
+    fn resolve_any(&self, key: Key) -> Option<Box<dyn Any>> {
+        self.bindings.get(&key).map(|factory| factory.load(self))
     }
 
     #[inline]
@@ -92,7 +92,7 @@ mod tests {
     fn test_resolve_existing_struct() {
         let mut binder = Binder::new();
         binder.bind(ExistingFactory(Arc::new(Impl1())));
-        let mut locator = Injector::from_binder(binder);
+        let locator = Injector::from_binder(binder);
 
         assert_eq!(Some(Arc::new(Impl1())), locator.resolve::<Impl1>());
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
@@ -102,7 +102,7 @@ mod tests {
     fn test_resolve_existing_interface() {
         let mut binder = Binder::new();
         binder.bind(ExistingFactory::<dyn Interface1>(Arc::new(Impl1())));
-        let mut locator = Injector::from_binder(binder);
+        let locator = Injector::from_binder(binder);
 
         assert_matches!(locator.resolve::<dyn Interface1>(), Some(_));
         assert_eq!(None, locator.resolve::<Impl1>());
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_resolve_nonexisting() {
-        let mut locator = Injector::from_binder(Binder::new());
+        let locator = Injector::from_binder(Binder::new());
 
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
         assert_eq!(None, locator.resolve::<Impl1>());
