@@ -6,9 +6,7 @@ extern crate assert_matches;
 #[macro_use]
 extern crate chassis;
 
-use std::any::TypeId;
-
-use chassis::{Binder, Injector};
+use chassis::{Binder, Injector, Key};
 use chassis::{CreatingFactory, Module};
 
 #[derive(Debug)]
@@ -38,7 +36,7 @@ fn inject_function_resolve() {
 
 #[test]
 fn inject_function_meta() {
-    let (_name, type_id) = Dummy::__injectmeta_new();
+    let (_name, _deps, result) = Dummy::__injectmeta_new();
 
-    assert_eq!(TypeId::of::<Dummy>(), type_id)
+    assert_eq!(Key::for_type::<Dummy>(), result)
 }

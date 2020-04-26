@@ -5,7 +5,6 @@ extern crate chassis;
 
 use std::sync::Arc;
 
-use chassis::CreatingFactory;
 use chassis::Injector;
 
 #[derive(Debug)]

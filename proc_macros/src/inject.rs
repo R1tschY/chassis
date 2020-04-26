@@ -41,13 +41,20 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
 
     let resolves = sig.inputs.iter().map(|input| {
         let ty = &input.ty;
-        // TODO: check if T is in scope
         quote! { __sl__.resolve_to::<#ty>() }
+    });
+    let dep_keys = sig.inputs.iter().map(|input| {
+        let ty = &input.ty;
+        quote! { chassis::Key::for_type::<#ty>() }
     });
 
     let code_metafn = quote! {
-        pub fn #metafn_name() -> (String, std::any::TypeId) {
-            ("<no name>".to_string(), std::any::TypeId::of::<Self>())
+        pub fn #metafn_name() -> (String, std::vec::Vec<chassis::Key>, chassis::Key) {
+            (
+                stringify!(#userfn_name).into(),
+                vec![ #(#dep_keys),* ],
+                chassis::Key::for_type::<Self>(),
+            )
         }
     };
 
