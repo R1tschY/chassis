@@ -6,8 +6,8 @@ extern crate assert_matches;
 #[macro_use]
 extern crate chassis;
 
-use chassis::{Binder, Injector, Key};
-use chassis::{CreatingFactory, Module};
+use chassis::Module;
+use chassis::{AnonymousModule, Binder, Injector, Key};
 
 #[derive(Debug)]
 struct Dummy();
@@ -19,17 +19,13 @@ impl Dummy {
     }
 }
 
-struct TestModule;
-
-impl Module for TestModule {
-    fn configure(&self, binder: &mut Binder) {
-        binder.bind(CreatingFactory(Box::new(Dummy::__inject_new)));
-    }
-}
-
 #[test]
 fn inject_function_resolve() {
-    let injector = Injector::builder().module(TestModule).build();
+    let module = AnonymousModule::new(|binder| {
+        binder.bind_factory(Dummy::__inject_new);
+    });
+
+    let injector = Injector::builder().module(module).build();
 
     assert_matches!(injector.resolve::<Dummy>(), Some(_));
 }

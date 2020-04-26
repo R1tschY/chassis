@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::Injector;
 use std::any::Any;
 
-pub trait Factory<T: ?Sized + 'static> {
+pub(crate) trait Factory<T: ?Sized + 'static> {
     fn load(&self, injector: &Injector) -> Arc<T>;
 
     fn into_trait_loader<Trait: ?Sized + 'static>(self) -> AsTrait<Trait, T, Self>
@@ -29,29 +29,31 @@ pub(crate) trait AnyFactory {
     fn load(&self, injector: &Injector) -> Box<dyn Any>;
 }
 
-pub(crate) struct AnyFactoryRef<T: ?Sized + 'static>(Arc<dyn Factory<T>>);
+pub(crate) type AnyFactoryRef = Arc<dyn AnyFactory>;
 
-impl<T: ?Sized + 'static> AnyFactoryRef<T> {
+pub(crate) struct AnyFactoryImpl<T: ?Sized + 'static>(Arc<dyn Factory<T>>);
+
+impl<T: ?Sized + 'static> AnyFactoryImpl<T> {
     pub fn new(factory: impl Factory<T> + 'static) -> Self {
         Self(Arc::new(factory))
     }
 }
 
-impl<T: ?Sized + 'static> AnyFactory for AnyFactoryRef<T> {
+impl<T: ?Sized + 'static> AnyFactory for AnyFactoryImpl<T> {
     fn load(&self, service_locator: &Injector) -> Box<dyn Any> {
         Box::new(self.0.load(service_locator))
     }
 }
 
-pub struct ExistingFactory<T: ?Sized + 'static>(pub Arc<T>);
+pub(crate) struct ConstantFactory<T: ?Sized + 'static>(pub Arc<T>);
 
-impl<T: ?Sized + 'static> Factory<T> for ExistingFactory<T> {
+impl<T: ?Sized + 'static> Factory<T> for ConstantFactory<T> {
     fn load(&self, _injector: &Injector) -> Arc<T> {
         Arc::clone(&self.0)
     }
 }
 
-pub struct CreatingFactory<T: 'static>(pub Box<dyn Fn(&Injector) -> T>);
+pub(crate) struct CreatingFactory<T: 'static>(pub Box<dyn Fn(&Injector) -> T>);
 
 impl<T: 'static> CreatingFactory<T> {
     pub fn new(function: impl Fn(&Injector) -> T + 'static) -> Self {
@@ -73,7 +75,7 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<T> for AsTrait<T, U, L> {
     }
 }*/
 
-pub struct AsTrait<T: ?Sized + 'static, U: 'static, L: Factory<U>>(
+pub(crate) struct AsTrait<T: ?Sized + 'static, U: 'static, L: Factory<U>>(
     L,
     PhantomData<U>,
     PhantomData<T>,

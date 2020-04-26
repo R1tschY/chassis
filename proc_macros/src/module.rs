@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 
-use crate::inject::{codegen_injectfns, INJECT_PREFIX};
+use crate::inject::{codegen_injectfns, INJECT_META_PREFIX, INJECT_PREFIX};
 use crate::sig::{parse_sig, InjectFn};
 use crate::syn_ext::IdentExt;
 
@@ -32,7 +32,8 @@ pub fn module(input: TokenStream) -> TokenStream {
         .iter()
         .map(|function| {
             let inject_fn = function.name.prepend(INJECT_PREFIX);
-            quote! { __binder__.bind(chassis::CreatingFactory::new(Self::#inject_fn)); }
+            let meta_fn = function.name.prepend(INJECT_META_PREFIX);
+            quote! { __binder__.bind_factory(Self::#inject_fn); }
         })
         .collect();
 

@@ -2,17 +2,21 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::binder::{Binder, Key};
-use crate::injector::builder::InjectorBuilder;
+use crate::factory::AnyFactoryRef;
+use crate::inject::builder::InjectorBuilder;
 use crate::resolve::ResolveFrom;
-use crate::{AnyFactory, Provider};
+use crate::{Binder, Key, Provider};
 
 pub mod builder;
 pub mod context;
 
+/*thread_local!(
+    static CONTEXT: RefCell<InjectorContext> = RefCell::new(InjectorContext::new())
+);*/
+
 /// Holds factories of all registered types.
 pub struct Injector {
-    bindings: HashMap<Key, Box<dyn AnyFactory>>,
+    bindings: HashMap<Key, AnyFactoryRef>,
 }
 
 impl Injector {
@@ -68,8 +72,6 @@ impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
 mod tests {
     use std::fmt::Debug;
 
-    use crate::factory::ExistingFactory;
-
     use super::*;
 
     trait Interface1: Debug {
@@ -91,7 +93,7 @@ mod tests {
     #[test]
     fn test_resolve_existing_struct() {
         let mut binder = Binder::new();
-        binder.bind(ExistingFactory(Arc::new(Impl1())));
+        binder.bind_instance(Impl1());
         let locator = Injector::from_binder(binder);
 
         assert_eq!(Some(Arc::new(Impl1())), locator.resolve::<Impl1>());
@@ -101,7 +103,7 @@ mod tests {
     #[test]
     fn test_resolve_existing_interface() {
         let mut binder = Binder::new();
-        binder.bind(ExistingFactory::<dyn Interface1>(Arc::new(Impl1())));
+        binder.bind_arc_instance::<dyn Interface1>(Arc::new(Impl1()));
         let locator = Injector::from_binder(binder);
 
         assert_matches!(locator.resolve::<dyn Interface1>(), Some(_));

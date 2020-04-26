@@ -7,8 +7,8 @@ extern crate chassis;
 
 use std::sync::Arc;
 
+use chassis::Module;
 use chassis::{Binder, Injector};
-use chassis::{CreatingFactory, Module};
 
 #[derive(Debug)]
 struct Class1();
@@ -44,9 +44,9 @@ struct TestModule;
 
 impl Module for TestModule {
     fn configure(&self, binder: &mut Binder) {
-        binder.bind(CreatingFactory(Box::new(factory!(Class1::new))));
-        binder.bind(CreatingFactory(Box::new(factory!(Class2::new))));
-        binder.bind(CreatingFactory(Box::new(factory!(Class3::new))));
+        binder.bind_factory(factory!(Class1::new));
+        binder.bind_factory(factory!(Class2::new));
+        binder.bind_factory(factory!(Class3::new));
     }
 }
 

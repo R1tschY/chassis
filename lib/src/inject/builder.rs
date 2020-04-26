@@ -1,5 +1,4 @@
-use crate::binder::Binder;
-use crate::{Injector, Module};
+use crate::{Binder, Injector, Module};
 use std::ops::Deref;
 
 #[derive(Default)]

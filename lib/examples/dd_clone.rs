@@ -1,4 +1,4 @@
-use chassis::{Binder, CreatingFactory, Injector, Module};
+use chassis::{Binder, Injector, Module};
 
 trait ProgressBar {}
 
@@ -27,7 +27,7 @@ struct DDModule;
 
 impl Module for DDModule {
     fn configure(&self, binder: &mut Binder) {
-        binder.bind(CreatingFactory(Box::new(|_sl| Dummy::new())));
+        binder.bind_factory(|_sl| Dummy::new());
     }
 }
 
