@@ -34,7 +34,7 @@ impl Class3 {
     }
 }
 
-struct Module();
+struct Module;
 
 #[module]
 impl Module {
@@ -51,7 +51,7 @@ impl Module {
 
 #[test]
 fn inject_function_resolve() {
-    let injector = Injector::builder().module(Module()).build();
+    let injector = Injector::from_module(Module);
 
     assert!(injector.contains::<Class3>());
     assert_matches!(injector.resolve::<Class3>(), Some(_))

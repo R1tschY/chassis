@@ -4,16 +4,22 @@ pub trait Module {
     fn configure(&self, binder: &mut Binder);
 }
 
-pub struct AnonymousModule(Box<dyn Fn(&mut Binder)>);
+pub struct AnonymousModule<T: Fn(&mut Binder)>(T);
 
-impl AnonymousModule {
-    pub fn new(f: impl Fn(&mut Binder) + 'static) -> Self {
-        Self(Box::new(f))
+impl<T: Fn(&mut Binder)> AnonymousModule<T> {
+    pub fn new(f: T) -> Self {
+        Self(f)
     }
 }
 
-impl Module for AnonymousModule {
+impl<T: Fn(&mut Binder)> Module for AnonymousModule<T> {
     fn configure(&self, binder: &mut Binder) {
         self.0(binder);
+    }
+}
+
+impl Module for dyn Fn(&mut Binder) {
+    fn configure(&self, binder: &mut Binder) {
+        self(binder);
     }
 }

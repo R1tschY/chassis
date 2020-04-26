@@ -27,7 +27,7 @@ struct DDModule;
 
 impl Module for DDModule {
     fn configure(&self, binder: &mut Binder) {
-        binder.bind_factory(|_sl| Dummy::new());
+        binder.bind::<Dummy>().to_factory(|_sl| Dummy::new());
     }
 }
 

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::factory::AnyFactoryRef;
 use crate::inject::builder::InjectorBuilder;
 use crate::resolve::ResolveFrom;
-use crate::{Binder, Key, Provider};
+use crate::{Binder, Key, Module, Provider};
 
 pub mod builder;
 pub mod context;
@@ -29,6 +29,10 @@ impl Injector {
 
     pub fn builder() -> InjectorBuilder {
         InjectorBuilder::default()
+    }
+
+    pub fn from_module(module: impl Module + 'static) -> Self {
+        Self::builder().module(module).build()
     }
 
     #[inline]
@@ -73,6 +77,7 @@ mod tests {
     use std::fmt::Debug;
 
     use super::*;
+    use crate::AnonymousModule;
 
     trait Interface1: Debug {
         fn do_something(&self);
@@ -92,9 +97,9 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_struct() {
-        let mut binder = Binder::new();
-        binder.bind_instance(Impl1());
-        let locator = Injector::from_binder(binder);
+        let locator = Injector::from_module(AnonymousModule::new(|mut binder| {
+            binder.bind::<Impl1>().to_instance(Impl1());
+        }));
 
         assert_eq!(Some(Arc::new(Impl1())), locator.resolve::<Impl1>());
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
@@ -102,9 +107,11 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_interface() {
-        let mut binder = Binder::new();
-        binder.bind_arc_instance::<dyn Interface1>(Arc::new(Impl1()));
-        let locator = Injector::from_binder(binder);
+        let locator = Injector::from_module(AnonymousModule::new(|mut binder| {
+            binder
+                .bind::<dyn Interface1>()
+                .to_arc_instance(Arc::new(Impl1()));
+        }));
 
         assert_matches!(locator.resolve::<dyn Interface1>(), Some(_));
         assert_eq!(None, locator.resolve::<Impl1>());

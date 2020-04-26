@@ -53,17 +53,26 @@ impl<T: ?Sized + 'static> Factory<T> for ConstantFactory<T> {
     }
 }
 
-pub(crate) struct CreatingFactory<T: 'static>(pub Box<dyn Fn(&Injector) -> T>);
+pub(crate) struct CreatingFactory<T: 'static, F: Fn(&Injector) -> T>(pub F);
 
-impl<T: 'static> CreatingFactory<T> {
-    pub fn new(function: impl Fn(&Injector) -> T + 'static) -> Self {
-        Self(Box::new(function))
+impl<T: 'static, F: Fn(&Injector) -> T> Factory<T> for CreatingFactory<T, F> {
+    fn load(&self, injector: &Injector) -> Arc<T> {
+        Arc::new(self.0(injector))
     }
 }
 
-impl<T: 'static> Factory<T> for CreatingFactory<T> {
+pub(crate) struct ArcCreatingFactory<T, F>(pub F)
+where
+    T: ?Sized + 'static,
+    F: Fn(&Injector) -> Arc<T>;
+
+impl<T, F> Factory<T> for ArcCreatingFactory<T, F>
+where
+    T: ?Sized + 'static,
+    F: Fn(&Injector) -> Arc<T>,
+{
     fn load(&self, injector: &Injector) -> Arc<T> {
-        Arc::new(self.0(injector))
+        self.0(injector)
     }
 }
 

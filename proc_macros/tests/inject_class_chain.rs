@@ -44,9 +44,9 @@ struct TestModule;
 
 impl Module for TestModule {
     fn configure(&self, binder: &mut Binder) {
-        binder.bind_factory(factory!(Class1::new));
-        binder.bind_factory(factory!(Class2::new));
-        binder.bind_factory(factory!(Class3::new));
+        binder.bind::<Class1>().to_factory(factory!(Class1::new));
+        binder.bind::<Class2>().to_factory(factory!(Class2::new));
+        binder.bind::<Class3>().to_factory(factory!(Class3::new));
     }
 }
 

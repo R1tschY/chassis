@@ -33,7 +33,8 @@ pub fn module(input: TokenStream) -> TokenStream {
         .map(|function| {
             let inject_fn = function.name.prepend(INJECT_PREFIX);
             let meta_fn = function.name.prepend(INJECT_META_PREFIX);
-            quote! { __binder__.bind_factory(Self::#inject_fn); }
+            let output_ty = &function.output;
+            quote! { __binder__.bind::<#output_ty>().to_factory(Self::#inject_fn); }
         })
         .collect();
 

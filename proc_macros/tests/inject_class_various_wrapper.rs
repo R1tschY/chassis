@@ -32,14 +32,14 @@ struct TestModule;
 
 impl Module for TestModule {
     fn configure(&self, binder: &mut Binder) {
-        binder.bind_factory(Class1::__inject_new);
-        binder.bind_factory(Class2::__inject_new);
+        binder.bind::<Class1>().to_factory(Class1::__inject_new);
+        binder.bind::<Class2>().to_factory(Class2::__inject_new);
     }
 }
 
 #[test]
 fn inject_function_resolve() {
-    let injector = Injector::builder().module(TestModule).build();
+    let injector = Injector::from_module(TestModule);
 
     assert!(injector.contains::<Class2>());
     assert_matches!(injector.resolve::<Class2>(), Some(_))
