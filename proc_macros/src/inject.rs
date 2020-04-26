@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 
-use crate::sig::{parse_sig, InjectFn};
+use crate::sig::{parse_sig, InjectFn, WrapperType};
 use crate::syn_ext::IdentExt;
 
 pub const INJECT_META_PREFIX: &str = "__injectmeta_";
@@ -36,6 +36,7 @@ fn codegen_classfn(userfn: &syn::ImplItemMethod, sig: InjectFn) -> TokenStream {
 
 pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::TokenStream {
     let userfn_name = &sig.name;
+    let userfn_name_str = sig.name.to_string();
     let injectfn_name = userfn_name.prepend(INJECT_PREFIX);
     let metafn_name = userfn_name.prepend(INJECT_META_PREFIX);
 
@@ -51,7 +52,7 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
     let code_metafn = quote! {
         pub fn #metafn_name() -> (String, std::vec::Vec<chassis::Key>, chassis::Key) {
             (
-                stringify!(#userfn_name).into(),
+                #userfn_name_str.into(),
                 vec![ #(#dep_keys),* ],
                 chassis::Key::for_type::<Self>(),
             )
@@ -65,11 +66,14 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
             }
         }
     } else {
-        let rty = &sig.output;
-        quote! {
-            pub fn #injectfn_name(__sl__: &chassis::Injector) -> #rty {
-                Self::#userfn_name(#(#resolves),*)
-            }
+        let rty = &sig.output.ty;
+        let body = quote! { Self::#userfn_name(#(#resolves),*) };
+        let fn_sig = quote! { pub fn #injectfn_name(__sl__: &chassis::Injector) };
+
+        match &sig.output.wrapper {
+            Some(WrapperType::Arc) => quote! { #fn_sig -> Arc<#rty> { #body } },
+            Some(WrapperType::Box) => quote! { #fn_sig -> Box<#rty> { #body } },
+            None => quote! { #fn_sig -> #rty { #body } },
         }
     };
 

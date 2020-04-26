@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::factory::{AnyFactoryRef, ArcCreatingFactory, ConstantFactory, CreatingFactory};
+use crate::factory::{
+    AnyFactoryRef, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
+};
 use crate::{AnyFactoryImpl, Injector, Key, Module};
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -88,6 +90,13 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         U: Fn(&Injector) -> Arc<T> + 'static,
     {
         self.set_target(Arc::new(AnyFactoryImpl::new(ArcCreatingFactory(factory))))
+    }
+
+    pub fn to_box_factory<U>(&mut self, factory: U)
+    where
+        U: Fn(&Injector) -> Box<T> + 'static,
+    {
+        self.set_target(Arc::new(AnyFactoryImpl::new(BoxCreatingFactory(factory))))
     }
 }
 

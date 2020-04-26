@@ -76,6 +76,21 @@ where
     }
 }
 
+pub(crate) struct BoxCreatingFactory<T, F>(pub F)
+where
+    T: ?Sized + 'static,
+    F: Fn(&Injector) -> Box<T>;
+
+impl<T, F> Factory<T> for BoxCreatingFactory<T, F>
+where
+    T: ?Sized + 'static,
+    F: Fn(&Injector) -> Box<T>,
+{
+    fn load(&self, injector: &Injector) -> Arc<T> {
+        self.0(injector).into()
+    }
+}
+
 /*pub struct AsTrait<T: ?Sized + 'static, U: T + 'static, L: Loader<U>>(L, PhantomData<T>);
 
 impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<T> for AsTrait<T, U, L> {

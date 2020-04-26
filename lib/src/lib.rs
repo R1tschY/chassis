@@ -10,6 +10,7 @@ pub use chassis_proc_macros::*;
 
 pub use crate::bind::binder::Binder;
 pub(crate) use crate::factory::{AnyFactory, AnyFactoryImpl, AnyFactoryRef};
+pub use crate::helper::*;
 pub use crate::inject::Injector;
 pub use crate::key::Key;
 pub use crate::module::{AnonymousModule, Module};
@@ -21,6 +22,7 @@ mod inject;
 
 mod errors;
 mod factory;
+mod helper;
 mod key;
 mod module;
 mod provider;
