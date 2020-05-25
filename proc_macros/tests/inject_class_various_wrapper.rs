@@ -28,7 +28,7 @@ impl Class2 {
     }
 }
 
-struct TestModule;
+/*struct TestModule;
 
 impl Module for TestModule {
     fn configure(&self, binder: &mut Binder) {
@@ -43,4 +43,4 @@ fn inject_function_resolve() {
 
     assert!(injector.contains::<Class2>());
     assert_matches!(injector.resolve::<Class2>(), Some(_))
-}
+}*/

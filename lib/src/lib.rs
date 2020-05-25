@@ -9,22 +9,32 @@ extern crate chassis_proc_macros;
 pub use chassis_proc_macros::*;
 
 pub use crate::bind::binder::Binder;
+pub use crate::config::module::{AnonymousModule, Module};
 pub(crate) use crate::factory::{AnyFactory, AnyFactoryImpl, AnyFactoryRef};
 pub use crate::helper::*;
 pub use crate::inject::Injector;
 pub use crate::key::Key;
-pub use crate::module::{AnonymousModule, Module};
 pub use crate::provider::{Provider, ProviderPtr};
 pub use crate::scope::Scope;
 
 mod bind;
+mod config;
 mod inject;
 
 mod errors;
 mod factory;
 mod helper;
 mod key;
-mod module;
 mod provider;
 mod resolve;
 mod scope;
+
+#[doc(hidden)]
+pub mod _internal {
+    pub use crate::config::dependency::Dependency;
+}
+
+pub mod meta {
+    pub use crate::bind::binding::Binding;
+    pub use crate::config::injection_point::InjectionPoint;
+}

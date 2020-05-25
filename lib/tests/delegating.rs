@@ -12,6 +12,7 @@ impl Trait1 for Class1 {}
 impl Trait2 for Class1 {}
 impl Trait12 for Class1 {}
 
+/*
 #[test]
 pub fn bind_to_trait() {
     let injector = Injector::from_module(AnonymousModule::new(|binder| {
@@ -22,3 +23,4 @@ pub fn bind_to_trait() {
 
     assert!(injector.resolve::<dyn Trait1>().is_some());
 }
+*/

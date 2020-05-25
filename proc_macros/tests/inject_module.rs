@@ -5,7 +5,7 @@ extern crate chassis;
 
 use std::sync::Arc;
 
-use chassis::Injector;
+use chassis::{Injector, Key};
 
 #[derive(Debug)]
 struct Class1();
@@ -55,4 +55,11 @@ fn inject_function_resolve() {
 
     assert!(injector.contains::<Class3>());
     assert_matches!(injector.resolve::<Class3>(), Some(_))
+}
+
+#[test]
+fn test_debug() {
+    let injector = Injector::from_module(Module);
+    let binding = injector.get_binding(Key::for_type::<Class3>()).unwrap();
+    println!("member: {}", binding.injection_point().member());
 }

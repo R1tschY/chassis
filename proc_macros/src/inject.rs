@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 
 use crate::sig::{parse_sig, InjectFn, WrapperType};
 use crate::syn_ext::IdentExt;
+use proc_macro2::{Ident, Span};
 
 pub const INJECT_META_PREFIX: &str = "__injectmeta_";
 pub const INJECT_PREFIX: &str = "__inject_";
@@ -49,12 +50,21 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
         quote! { chassis::Key::for_type::<#ty>() }
     });
 
+    let factory = match &sig.output.wrapper {
+        Some(WrapperType::Arc) => "from_arc_factory",
+        Some(WrapperType::Box) => "from_box_factory",
+        None => "from_factory",
+    };
+    let factory_ident = Ident::new(factory, Span::call_site());
+
     let code_metafn = quote! {
-        pub fn #metafn_name() -> (String, std::vec::Vec<chassis::Key>, chassis::Key) {
-            (
-                #userfn_name_str.into(),
-                vec![ #(#dep_keys),* ],
-                chassis::Key::for_type::<Self>(),
+        pub fn #metafn_name() -> chassis::meta::Binding {
+            chassis::meta::Binding::#factory_ident(
+                Self::#injectfn_name,
+                chassis::meta::InjectionPoint::for_module_function(
+                    #userfn_name_str,
+                    &[ #(#dep_keys),* ],
+                )
             )
         }
     };

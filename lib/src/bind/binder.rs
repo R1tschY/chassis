@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::bind::binding::Binding;
 use crate::factory::{
     AnyFactoryRef, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
 };
@@ -8,7 +9,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 pub struct Binder {
-    bindings: Vec<RecordedBinding>,
+    bindings: Vec<Binding>,
 }
 
 impl Binder {
@@ -18,7 +19,7 @@ impl Binder {
         }
     }
 
-    pub fn bind<T: ?Sized + 'static>(&mut self) -> BindingBuilder<T> {
+    /*    pub fn bind<T: ?Sized + 'static>(&mut self) -> BindingBuilder<T> {
         let pos = self.bind_any(RecordedBinding::untargeted(Key::for_type::<T>()));
         BindingBuilder::new(self, pos)
     }
@@ -26,6 +27,10 @@ impl Binder {
     fn bind_any(&mut self, binding: RecordedBinding) -> usize {
         self.bindings.push(binding);
         self.bindings.len() - 1
+    }*/
+
+    pub fn use_binding(&mut self, binding: Binding) {
+        self.bindings.push(binding);
     }
 
     /// Install a Module
@@ -34,41 +39,29 @@ impl Binder {
         module.configure(self)
     }
 
-    pub(crate) fn build_bindings(self) -> HashMap<Key, AnyFactoryRef> {
+    pub(crate) fn build_bindings(self) -> HashMap<Key, Binding> {
         self.bindings
             .into_iter()
-            .map(|binding| {
-                (
-                    binding.key,
-                    binding.target.expect("Implementation is missing"),
-                )
-            })
+            .map(|binding| (binding.key(), binding))
             .collect()
     }
 }
 
-pub struct BindingBuilder<'a, T: ?Sized + 'static> {
+/*pub struct BindingBuilder<'a, T: ?Sized + 'static> {
     binder: &'a mut Binder,
     pos: usize,
     key: PhantomData<T>,
 }
 
 impl<'a, T: 'static> BindingBuilder<'a, T> {
-    pub fn to_factory<U>(&mut self, factory: U)
-    where
-        U: Fn(&Injector) -> T + 'static,
-    {
-        self.set_target(Arc::new(AnyFactoryImpl::new(CreatingFactory(factory))))
-    }
-
     pub fn to_instance(&mut self, instance: T) {
         self.set_target(Arc::new(AnyFactoryImpl::new(ConstantFactory(Arc::new(
             instance,
         )))));
     }
-}
+}*/
 
-impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
+/*impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
     fn new(binder: &'a mut Binder, pos: usize) -> Self {
         Self {
             binder,
@@ -84,25 +77,10 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
     fn set_target(&mut self, factory: AnyFactoryRef) {
         self.binder.bindings[self.pos].set_target(factory);
     }
+}*/
 
-    pub fn to_arc_factory<U>(&mut self, factory: U)
-    where
-        U: Fn(&Injector) -> Arc<T> + 'static,
-    {
-        self.set_target(Arc::new(AnyFactoryImpl::new(ArcCreatingFactory(factory))))
-    }
-
-    pub fn to_box_factory<U>(&mut self, factory: U)
-    where
-        U: Fn(&Injector) -> Box<T> + 'static,
-    {
-        self.set_target(Arc::new(AnyFactoryImpl::new(BoxCreatingFactory(factory))))
-    }
-}
-
-pub(crate) struct RecordedBinding {
-    key: Key,
-    target: Option<AnyFactoryRef>,
+/*pub(crate) struct RecordedBinding {
+    binding: Binding,
 }
 
 impl RecordedBinding {
@@ -120,4 +98,4 @@ impl RecordedBinding {
             panic!("Implementation is set multiple times");
         }
     }
-}
+}*/

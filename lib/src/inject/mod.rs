@@ -2,6 +2,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::bind::binding::Binding;
 use crate::factory::AnyFactoryRef;
 use crate::inject::builder::InjectorBuilder;
 use crate::resolve::ResolveFrom;
@@ -16,7 +17,7 @@ pub mod context;
 
 /// Holds factories of all registered types.
 pub struct Injector {
-    bindings: HashMap<Key, AnyFactoryRef>,
+    bindings: HashMap<Key, Binding>,
 }
 
 impl Injector {
@@ -50,7 +51,14 @@ impl Injector {
     }
 
     fn resolve_any(&self, key: Key) -> Option<Box<dyn Any>> {
-        self.bindings.get(&key).map(|factory| factory.load(self))
+        self.bindings
+            .get(&key)
+            .map(|binding| binding.factory().load(self))
+    }
+
+    /// Only use in the context of tooling!
+    pub fn get_binding(&self, key: Key) -> Option<&Binding> {
+        self.bindings.get(&key)
     }
 
     #[inline]
@@ -99,6 +107,7 @@ mod tests {
     #[derive(Eq, PartialEq, Debug)]
     struct Impl2();
 
+    /*
     #[test]
     fn test_resolve_existing_struct() {
         let locator = Injector::from_module(AnonymousModule::new(|mut binder| {
@@ -127,7 +136,7 @@ mod tests {
 
         assert_matches!(locator.resolve::<dyn Interface1>(), None);
         assert_eq!(None, locator.resolve::<Impl1>());
-    }
+    }*/
 
     /*    #[test]
     fn it_works() {

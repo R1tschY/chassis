@@ -40,6 +40,7 @@ impl Class3 {
     }
 }
 
+/*
 struct TestModule;
 
 impl Module for TestModule {
@@ -57,3 +58,4 @@ fn inject_function_resolve() {
     assert!(injector.contains::<Class3>());
     assert_matches!(injector.resolve::<Class3>(), Some(_))
 }
+*/

@@ -36,15 +36,9 @@ pub fn module(input: TokenStream) -> TokenStream {
             let inject_fn = function.name.prepend(INJECT_PREFIX);
             let meta_fn = function.name.prepend(INJECT_META_PREFIX);
             let output_ty = &function.output.ty;
-            let factory = match &function.output.wrapper {
-                Some(WrapperType::Arc) => "to_arc_factory",
-                Some(WrapperType::Box) => "to_box_factory",
-                None => "to_factory",
-            };
-            let factory_ident = Ident::new(factory, Span::call_site());
 
             quote! {
-                __binder__.bind::<#output_ty>().#factory_ident(Self::#inject_fn);
+                __binder__.use_binding(Self::#meta_fn());
             }
         })
         .collect();
