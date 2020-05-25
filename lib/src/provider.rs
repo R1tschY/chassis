@@ -5,6 +5,7 @@ use std::sync::Arc;
 /// https://javax-inject.github.io/javax-inject/api/javax/inject/Provider.html
 pub trait Provider<T: ?Sized + 'static> {
     fn get(&self) -> Arc<T>;
+    fn try_get(&self) -> Option<Arc<T>>;
 }
 
 pub struct ProviderPtr<T: ?Sized + 'static>(Box<dyn Provider<T>>);

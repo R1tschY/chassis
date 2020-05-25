@@ -14,3 +14,6 @@ pub trait Scope {
     //         .map(|any| R::resolve(*any.downcast::<Arc<T>>().unwrap()))
     // }
 }
+
+pub struct Singleton;
+pub type Process = Singleton;

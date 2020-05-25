@@ -70,6 +70,10 @@ impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
     fn get(&self) -> Arc<T> {
         self.resolve::<T>().unwrap()
     }
+
+    fn try_get(&self) -> Option<Arc<T>> {
+        self.resolve::<T>()
+    }
 }
 
 #[cfg(test)]

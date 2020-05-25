@@ -17,9 +17,3 @@ impl<T: Fn(&mut Binder)> Module for AnonymousModule<T> {
         self.0(binder);
     }
 }
-
-impl Module for dyn Fn(&mut Binder) {
-    fn configure(&self, binder: &mut Binder) {
-        self(binder);
-    }
-}
