@@ -16,7 +16,7 @@ impl InjectionPoint {
             dependencies: parameters
                 .iter()
                 .enumerate()
-                .map(|(i, key)| Dependency::new(key.clone(), false, i as i8))
+                .map(|(i, key)| Dependency::new(key.clone(), i as i8))
                 .collect(),
         }
     }

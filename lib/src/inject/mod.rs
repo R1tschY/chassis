@@ -24,7 +24,7 @@ impl Injector {
     /// for tests only
     pub(crate) fn from_binder(binder: Binder) -> Self {
         Self {
-            bindings: binder.build_bindings(),
+            bindings: binder.link().bindings(),
         }
     }
 

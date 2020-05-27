@@ -2,6 +2,7 @@ use crate::config::injection_point::InjectionPoint;
 use crate::factory::{ArcCreatingFactory, BoxCreatingFactory, CreatingFactory};
 use crate::{AnyFactoryImpl, AnyFactoryRef, Injector, Key};
 use std::sync::Arc;
+use crate::config::dependency::Dependency;
 
 pub struct Binding {
     factory: AnyFactoryRef,
@@ -56,5 +57,9 @@ impl Binding {
 
     pub fn injection_point(&self) -> &InjectionPoint {
         &self.injection_point
+    }
+
+    pub fn dependencies(&self) -> &[Dependency] {
+        self.injection_point.dependencies()
     }
 }

@@ -7,6 +7,7 @@ use crate::factory::{
 use crate::{AnyFactoryImpl, Injector, Key, Module};
 use std::marker::PhantomData;
 use std::sync::Arc;
+use crate::bind::linker::{Linker, LinkedBindings};
 
 pub struct Binder {
     bindings: Vec<Binding>,
@@ -39,11 +40,8 @@ impl Binder {
         module.configure(self)
     }
 
-    pub(crate) fn build_bindings(self) -> HashMap<Key, Binding> {
-        self.bindings
-            .into_iter()
-            .map(|binding| (binding.key(), binding))
-            .collect()
+    pub(crate) fn link(self) -> LinkedBindings {
+        Linker::new(self.bindings).link()
     }
 }
 
