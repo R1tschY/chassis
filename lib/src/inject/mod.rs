@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::bind::binding::Binding;
-use crate::factory::AnyFactoryRef;
 use crate::inject::builder::InjectorBuilder;
 use crate::resolve::ResolveFrom;
 use crate::{Binder, Key, Module, Provider};
+use crate::key::TypedKey;
 
 pub mod builder;
 pub mod context;
@@ -37,16 +37,26 @@ impl Injector {
     }
 
     #[inline]
-    pub fn contains<T: ?Sized + 'static>(&self) -> bool {
-        self.contains_factory(Key::for_type::<T>())
+    pub fn contains_type<T: ?Sized + 'static>(&self) -> bool {
+        self.contains_untyped_key(Key::new::<T>().into())
     }
 
-    fn contains_factory(&self, key: Key) -> bool {
+    #[inline]
+    pub fn contains<T: ?Sized + 'static>(&self, key: TypedKey<T>) -> bool {
+        self.contains_untyped_key(key.into())
+    }
+
+    pub fn contains_untyped_key(&self, key: Key) -> bool {
         self.bindings.contains_key(&key)
     }
 
-    pub fn resolve<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
-        self.resolve_any(Key::for_type::<T>())
+    pub fn resolve_type<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
+        self.resolve_any(Key::new::<T>().into())
+            .map(|any| *any.downcast::<Arc<T>>().unwrap())
+    }
+
+    pub fn resolve<T: ?Sized + 'static>(&self, key: TypedKey<T>) -> Option<Arc<T>> {
+        self.resolve_any(key.into())
             .map(|any| *any.downcast::<Arc<T>>().unwrap())
     }
 
@@ -76,11 +86,11 @@ impl Injector {
 // TODO: check if T is in Injector before creating a Provider
 impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
     fn get(&self) -> Arc<T> {
-        self.resolve::<T>().unwrap()
+        self.resolve_type::<T>().unwrap()
     }
 
     fn try_get(&self) -> Option<Arc<T>> {
-        self.resolve::<T>()
+        self.resolve_type::<T>()
     }
 }
 

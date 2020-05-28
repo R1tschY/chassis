@@ -1,11 +1,9 @@
-use std::error::Error;
 use crate::Key;
-use crate::config::dependency::Dependency;
 
 pub enum ChassisError {
     MissingImplementation(Key),
-    CyclicDependency(Vec<Dependency>),
-    CreateError(Box<dyn Error>),
+    // CyclicDependency(Vec<Dependency>),
+    // CreateError(Box<dyn Error>),
 }
 
 
@@ -25,4 +23,4 @@ impl Errors {
 }
 
 
-type ChassisResult<T> = Result<T, Errors>;
+// type ChassisResult<T> = Result<T, Errors>;

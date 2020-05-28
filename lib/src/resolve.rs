@@ -14,12 +14,12 @@ pub trait ResolveFrom {
 
 impl<T: ?Sized + 'static> ResolveFrom for Arc<T> {
     fn resolve_from(scope: &Injector) -> Self {
-        scope.resolve().unwrap()
+        scope.resolve_type().unwrap()
     }
 }
 
 impl<T: ?Sized + 'static> ResolveFrom for Option<Arc<T>> {
     fn resolve_from(scope: &Injector) -> Self {
-        scope.resolve()
+        scope.resolve_type()
     }
 }

@@ -1,13 +1,6 @@
-use std::collections::HashMap;
-
 use crate::bind::binding::Binding;
-use crate::factory::{
-    AnyFactoryRef, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
-};
-use crate::{AnyFactoryImpl, Injector, Key, Module};
-use std::marker::PhantomData;
-use std::sync::Arc;
-use crate::bind::linker::{Linker, LinkedBindings};
+use crate::bind::linker::{LinkedBindings, Linker};
+use crate::{Module};
 
 pub struct Binder {
     bindings: Vec<Binding>,

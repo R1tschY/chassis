@@ -34,5 +34,5 @@ impl Module for DDModule {
 fn main() {
     let injector = Injector::builder().module(DDModule).build();
 
-    injector.resolve::<Dummy>().unwrap().convert(&[1, 2, 3]);
+    injector.resolve_type::<Dummy>().unwrap().convert(&[1, 2, 3]);
 }

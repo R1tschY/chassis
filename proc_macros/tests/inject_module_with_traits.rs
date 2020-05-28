@@ -32,7 +32,7 @@ fn one_trait() {
     }
 
     let injector = Injector::from_module(Module);
-    assert_matches!(injector.resolve::<dyn Trait1>(), Some(_));
+    assert_matches!(injector.resolve_type::<dyn Trait1>(), Some(_));
 }
 
 #[test]
@@ -55,8 +55,8 @@ fn two_traits_explicit() {
     }
 
     let injector = Injector::from_module(Module);
-    assert_matches!(injector.resolve::<dyn Trait1>(), Some(_));
-    assert_matches!(injector.resolve::<dyn Trait2>(), Some(_));
+    assert_matches!(injector.resolve_type::<dyn Trait1>(), Some(_));
+    assert_matches!(injector.resolve_type::<dyn Trait2>(), Some(_));
 }
 
 #[test]
@@ -79,6 +79,6 @@ fn two_traits() {
     }
 
     let injector = Injector::from_module(Module);
-    assert_matches!(injector.resolve::<dyn Trait1>(), Some(_));
-    assert_matches!(injector.resolve::<dyn Trait2>(), Some(_));
+    assert_matches!(injector.resolve_type::<dyn Trait1>(), Some(_));
+    assert_matches!(injector.resolve_type::<dyn Trait2>(), Some(_));
 }

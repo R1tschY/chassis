@@ -1,7 +1,9 @@
-use syn::{GenericArgument, Ident, PathArguments, PathSegment, Type};
+use syn::{Attribute, GenericArgument, Ident, PathArguments, PathSegment, Type};
+use syn::spanned::Spanned;
 
 pub struct InjectFnArg {
     pub name: Option<Ident>,
+    pub attr: Option<Attribute>,
     pub ty: Type,
 }
 
@@ -21,22 +23,43 @@ pub enum WrapperType {
     Box,
 }
 
-pub fn parse_sig(sig: &syn::Signature) -> InjectFn {
+fn is_chassis_attr(attr: &Attribute) -> bool {
+    let segs = &attr.path.segments;
+    segs.len() == 1 && &segs[0].ident.to_string() == "chassis"
+}
+
+fn drain_where<T: Clone, F: Fn(&T) -> bool>(v: &mut Vec<T>, f: F) -> Vec<T> {
+    // TODO: use Vec::drain_filter when stabilised
+    let res: Vec<T> = v.iter().filter(|x| f(x)).map(|x| x.clone()).collect();
+    v.retain(|x| !f(x));
+    res
+}
+
+/// Parse function signature and removes chassis annotations.
+pub fn process_sig(sig: &mut syn::Signature) -> InjectFn {
     let inputs: Vec<_> = sig
         .inputs
-        .iter()
+        .iter_mut()
         .map(|input| {
-            let (ident, ty) = match input {
+            let (attrs, ident, ty) = match input {
                 syn::FnArg::Typed(arg) => match *arg.pat {
-                    syn::Pat::Ident(ref pat) => (Some(pat.ident.clone()), &arg.ty),
-                    syn::Pat::Wild(_) => (None, &arg.ty),
+                    syn::Pat::Ident(ref mut pat) => {
+                        (&mut arg.attrs, Some(pat.ident.clone()), &arg.ty)
+                    }
+                    syn::Pat::Wild(_) => (&mut arg.attrs, None, &arg.ty),
                     _ => panic!("invalid use of pattern"),
                 },
                 _ => unreachable!("only usable on functions"),
             };
 
+            let chassis_attrs: Vec<Attribute> = drain_where(attrs, is_chassis_attr);
+            if chassis_attrs.len() > 1 {
+                panic!("Only one chassis dependency annotation is allowed");
+            }
+
             InjectFnArg {
                 name: ident,
+                attr: chassis_attrs.into_iter().nth(0),
                 ty: *ty.clone(),
             }
         })

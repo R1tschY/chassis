@@ -16,6 +16,7 @@ pub use crate::inject::Injector;
 pub use crate::key::Key;
 pub use crate::provider::{Provider, ProviderPtr};
 pub use crate::scope::Scope;
+pub use crate::bind::annotation::{BindAnnotation, Named};
 
 mod bind;
 mod config;

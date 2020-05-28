@@ -5,24 +5,26 @@ extern crate chassis;
 
 use std::sync::Arc;
 
-use chassis::Injector;
+use chassis::{Injector, BindAnnotation};
 
 #[derive(Debug)]
 struct Class1;
 
 #[derive(Debug)]
-struct Class2;
+struct Transactional;
+
+impl BindAnnotation for Transactional {}
 
 struct Module;
 
+#[rustfmt::skip]
 #[module]
 impl Module {
-    pub fn class1() -> Arc<Class1> {
-        Arc::new(Class1)
-    }
-
-    pub fn class2() -> Box<Class2> {
-        Box::new(Class2)
+    pub fn class1(
+        #[chassis(Named("parameter1"))] a1: Arc<String>,
+        #[chassis(Transactional)] a2: Arc<String>
+    ) -> Class1 {
+        Class1
     }
 }
 
@@ -31,11 +33,4 @@ fn from_arc() {
     let injector = Injector::from_module(Module);
 
     assert_matches!(injector.resolve_type::<Class1>(), Some(_))
-}
-
-#[test]
-fn from_box() {
-    let injector = Injector::from_module(Module);
-
-    assert_matches!(injector.resolve_type::<Class2>(), Some(_))
 }

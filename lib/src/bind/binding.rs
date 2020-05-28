@@ -1,8 +1,9 @@
+use crate::config::dependency::Dependency;
 use crate::config::injection_point::InjectionPoint;
 use crate::factory::{ArcCreatingFactory, BoxCreatingFactory, CreatingFactory};
 use crate::{AnyFactoryImpl, AnyFactoryRef, Injector, Key};
 use std::sync::Arc;
-use crate::config::dependency::Dependency;
+use crate::key::TypedKey;
 
 pub struct Binding {
     factory: AnyFactoryRef,
@@ -19,7 +20,7 @@ impl Binding {
         Self {
             factory: Arc::new(AnyFactoryImpl::new(ArcCreatingFactory(factory))),
             injection_point,
-            key: Key::for_type::<T>(),
+            key: Key::new::<T>(),
         }
     }
 
@@ -31,7 +32,7 @@ impl Binding {
         Self {
             factory: Arc::new(AnyFactoryImpl::new(BoxCreatingFactory(factory))),
             injection_point,
-            key: Key::for_type::<T>(),
+            key: Key::new::<T>(),
         }
     }
 
@@ -43,7 +44,7 @@ impl Binding {
         Self {
             factory: Arc::new(AnyFactoryImpl::new(CreatingFactory(factory))),
             injection_point,
-            key: Key::for_type::<T>(),
+            key: Key::new::<T>(),
         }
     }
 

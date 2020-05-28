@@ -15,5 +15,5 @@ pub trait Scope {
     // }
 }
 
-pub struct Singleton;
-pub type Process = Singleton;
+//pub struct Singleton;
+//pub type Process = Singleton;

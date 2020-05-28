@@ -105,11 +105,11 @@ pub(crate) struct AsTrait<T: ?Sized + 'static, U: 'static, L: Factory<U>>(
     PhantomData<T>,
 );
 
-impl<T: ?Sized + 'static, U, L: Factory<U>> AsTrait<T, U, L> {
-    pub fn new(factory: L) -> Self {
-        Self(factory, PhantomData, PhantomData)
-    }
-}
+// impl<T: ?Sized + 'static, U, L: Factory<U>> AsTrait<T, U, L> {
+//     pub fn new(factory: L) -> Self {
+//         Self(factory, PhantomData, PhantomData)
+//     }
+// }
 
 impl<T: ?Sized + 'static, U, L: Factory<U>> Factory<U> for AsTrait<T, U, L>
 where

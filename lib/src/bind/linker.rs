@@ -39,10 +39,6 @@ impl Linker {
         }
     }
 
-    fn add_error(&mut self, error: ChassisError) {
-        self.errors.add(error)
-    }
-
     pub fn check_for_missing(&mut self) {
         for binding in self.bindings.values() {
             for dep in binding.dependencies() {
