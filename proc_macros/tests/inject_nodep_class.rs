@@ -6,8 +6,7 @@ extern crate assert_matches;
 #[macro_use]
 extern crate chassis;
 
-use chassis::meta::Binding;
-use chassis::{AnonymousModule, Injector, Key};
+use chassis::{AnonymousModule, Injector};
 
 #[derive(Debug)]
 struct Dummy();

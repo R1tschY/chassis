@@ -1,6 +1,3 @@
-use chassis::{AnonymousModule, Injector};
-use std::sync::Arc;
-
 #[derive(Debug, Eq, PartialEq)]
 struct Class1;
 

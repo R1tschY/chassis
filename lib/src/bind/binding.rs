@@ -1,9 +1,6 @@
 use crate::config::dependency::Dependency;
 use crate::config::injection_point::InjectionPoint;
-use crate::factory::{ArcCreatingFactory, BoxCreatingFactory, CreatingFactory};
-use crate::key::TypedKey;
-use crate::{AnyFactoryImpl, AnyFactoryRef, BindAnnotation, Injector, Key};
-use std::sync::Arc;
+use crate::{AnyFactoryRef, BindAnnotation, Key};
 
 const NO_DEPENDENCIES: &[Dependency] = &[];
 

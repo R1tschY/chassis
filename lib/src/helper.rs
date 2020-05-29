@@ -52,6 +52,6 @@ mod tests {
 
     #[test]
     fn creation() {
-        let a = FactoryResult2::<Class1, dyn Trait1, dyn Trait2>::new(Class1);
+        FactoryResult2::<Class1, dyn Trait1, dyn Trait2>::new(Class1);
     }
 }

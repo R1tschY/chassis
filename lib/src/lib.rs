@@ -8,15 +8,15 @@ extern crate chassis_proc_macros;
 #[doc(hidden)]
 pub use chassis_proc_macros::*;
 
+pub use crate::bind::annotation::{BindAnnotation, Named};
 pub use crate::bind::binder::Binder;
 pub use crate::config::module::{AnonymousModule, Module};
-pub(crate) use crate::factory::{AnyFactory, AnyFactoryImpl, AnyFactoryRef};
+pub(crate) use crate::factory::AnyFactoryRef;
 pub use crate::helper::*;
 pub use crate::inject::Injector;
 pub use crate::key::Key;
 pub use crate::provider::{Provider, ProviderPtr};
 pub use crate::scope::Scope;
-pub use crate::bind::annotation::{BindAnnotation, Named};
 
 mod bind;
 mod config;

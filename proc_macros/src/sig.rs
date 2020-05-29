@@ -1,5 +1,4 @@
 use syn::{Attribute, GenericArgument, Ident, PathArguments, PathSegment, Type};
-use syn::spanned::Spanned;
 
 pub struct InjectFnArg {
     pub name: Option<Ident>,

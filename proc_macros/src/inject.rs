@@ -3,8 +3,7 @@ use proc_macro::TokenStream;
 use crate::sig::{process_sig, InjectFn, WrapperType};
 use crate::syn_ext::IdentExt;
 use proc_macro2::{Ident, Span};
-use syn::parse::{Parse, ParseBuffer, ParseStream};
-use syn::token::Token;
+use syn::parse::{Parse, ParseStream};
 use syn::Expr;
 
 pub const INJECT_META_PREFIX: &str = "__injectbind_";
@@ -92,6 +91,7 @@ pub fn codegen_injectfns(
 
     let code_metafn = quote_spanned! {span=>
         pub fn #metafn_name(__binder__: &mut chassis::Binder) {
+            #[allow(unused_imports)]
             use chassis::Named;
 
             __binder__

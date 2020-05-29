@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_struct() {
-        let locator = Injector::from_module(AnonymousModule::new(|mut binder| {
+        let locator = Injector::from_module(AnonymousModule::new(|binder| {
             binder.bind::<Impl1>().to_instance(Impl1());
         }));
 
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_resolve_existing_interface() {
-        let locator = Injector::from_module(AnonymousModule::new(|mut binder| {
+        let locator = Injector::from_module(AnonymousModule::new(|binder| {
             binder
                 .bind::<dyn Interface1>()
                 .to_arc_instance(Arc::new(Impl1()));

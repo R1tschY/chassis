@@ -1,4 +1,7 @@
-use chassis::{Binder, Injector, Module};
+#[macro_use]
+extern crate chassis;
+
+use chassis::Injector;
 
 trait ProgressBar {}
 
@@ -11,7 +14,6 @@ trait Converter {
 struct Dummy();
 
 impl Dummy {
-    //#[inject]
     pub fn new() -> Self {
         Self()
     }
@@ -25,14 +27,18 @@ impl Converter for Dummy {
 
 struct DDModule;
 
-impl Module for DDModule {
-    fn configure(&self, binder: &mut Binder) {
-        //TODO:binder.bind::<Dummy>().to_factory(|_sl| Dummy::new());
+#[module]
+impl DDModule {
+    pub fn dummy() -> Dummy {
+        Dummy::new()
     }
 }
 
 fn main() {
     let injector = Injector::builder().module(DDModule).build();
 
-    injector.resolve_type::<Dummy>().unwrap().convert(&[1, 2, 3]);
+    injector
+        .resolve_type::<Dummy>()
+        .unwrap()
+        .convert(&[1, 2, 3]);
 }

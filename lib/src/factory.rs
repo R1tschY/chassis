@@ -119,21 +119,3 @@ where
         self.0.load(injector)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // struct Dummy();
-    //
-    // trait DummyTrait { }
-    //
-    // impl DummyTrait for Dummy { }
-
-    #[test]
-    fn as_trait() {
-        // let loader = FactoryLoader(Box::new(|sf| Dummy()));
-        // let as_trait: Arc<Dummy> =
-        //     Box::new(loader.into_trait_loader::<dyn DummyTrait>()).load();
-    }
-}

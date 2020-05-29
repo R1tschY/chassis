@@ -5,10 +5,10 @@ extern crate chassis;
 
 use std::sync::Arc;
 
-use chassis::{Injector, BindAnnotation};
+use chassis::{BindAnnotation, Injector};
 
 #[derive(Debug)]
-struct Class1;
+struct Class1(Arc<String>, Arc<String>);
 
 #[derive(Debug)]
 struct Transactional;
@@ -24,7 +24,7 @@ impl Module {
         #[chassis(Named("parameter1"))] a1: Arc<String>,
         #[chassis(Transactional)] a2: Arc<String>
     ) -> Class1 {
-        Class1
+        Class1(a1, a2)
     }
 }
 

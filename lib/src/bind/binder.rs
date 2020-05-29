@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
-use std::process::Command;
 use std::sync::Arc;
 
 use crate::bind::binding::Binding;
@@ -9,7 +8,7 @@ use crate::config::injection_point::InjectionPoint;
 use crate::factory::{
     to_any_factory, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
 };
-use crate::{AnyFactoryImpl, AnyFactoryRef, BindAnnotation, Injector, Key, Module};
+use crate::{AnyFactoryRef, BindAnnotation, Injector, Key, Module};
 
 pub struct Binder {
     recorded: Vec<RecordedBinding>,
