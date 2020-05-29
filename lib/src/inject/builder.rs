@@ -1,4 +1,4 @@
-use crate::{Binder, Injector, Module};
+use crate::{Binder, ChassisResult, Injector, Module};
 use std::ops::Deref;
 
 #[derive(Default)]
@@ -12,7 +12,7 @@ impl InjectorBuilder {
         self
     }
 
-    pub fn build(&mut self) -> Injector {
+    pub fn build(&mut self) -> ChassisResult<Injector> {
         let mut binder = Binder::new();
 
         for module in &self.modules {

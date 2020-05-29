@@ -4,6 +4,7 @@ pub use chassis_proc_macros::{factory, inject, module};
 pub use crate::bind::annotation::{BindAnnotation, Named};
 pub use crate::bind::binder::Binder;
 pub use crate::config::module::{AnonymousModule, Module};
+pub use crate::errors::{ChassisError, ChassisResult, Errors};
 pub(crate) use crate::factory::AnyFactoryRef;
 pub use crate::helper::*;
 pub use crate::inject::Injector;

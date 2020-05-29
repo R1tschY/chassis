@@ -27,7 +27,7 @@ impl Module {
 
 #[test]
 fn from_arc() {
-    let injector = Injector::from_module(Module);
+    let injector = Injector::from_module(Module).unwrap();
 
     assert_matches!(injector.resolve_type::<Class1>(), Some(_))
 }

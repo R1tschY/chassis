@@ -6,7 +6,7 @@ use crate::bind::binding::Binding;
 use crate::inject::builder::InjectorBuilder;
 use crate::key::TypedKey;
 use crate::resolve::ResolveFrom;
-use crate::{BindAnnotation, Binder, Key, Module, Provider};
+use crate::{BindAnnotation, Binder, ChassisResult, Key, Module, Provider};
 
 pub mod builder;
 pub mod context;
@@ -22,17 +22,17 @@ pub struct Injector {
 
 impl Injector {
     /// for tests only
-    pub(crate) fn from_binder(binder: Binder) -> Self {
-        Self {
-            bindings: binder.link().bindings(),
-        }
+    pub(crate) fn from_binder(binder: Binder) -> ChassisResult<Self> {
+        Ok(Self {
+            bindings: binder.link()?.bindings(),
+        })
     }
 
     pub fn builder() -> InjectorBuilder {
         InjectorBuilder::default()
     }
 
-    pub fn from_module(module: impl Module + 'static) -> Self {
+    pub fn from_module(module: impl Module + 'static) -> ChassisResult<Self> {
         Self::builder().module(module).build()
     }
 
@@ -130,7 +130,8 @@ mod tests {
     fn test_resolve_existing_struct() {
         let locator = Injector::from_module(AnonymousModule::new(|binder| {
             binder.bind::<Impl1>().to_instance(Impl1());
-        }));
+        }))
+        .unwrap();
 
         assert_eq!(Some(Arc::new(Impl1())), locator.resolve_type::<Impl1>());
         assert_matches!(locator.resolve_type::<dyn Interface1>(), None);
@@ -142,7 +143,8 @@ mod tests {
             binder
                 .bind::<dyn Interface1>()
                 .to_arc_instance(Arc::new(Impl1()));
-        }));
+        }))
+        .unwrap();
 
         assert_matches!(locator.resolve_type::<dyn Interface1>(), Some(_));
         assert_eq!(None, locator.resolve_type::<Impl1>());
@@ -150,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_resolve_nonexisting() {
-        let locator = Injector::from_binder(Binder::new());
+        let locator = Injector::from_binder(Binder::new()).unwrap();
 
         assert_matches!(locator.resolve_type::<dyn Interface1>(), None);
         assert_eq!(None, locator.resolve_type::<Impl1>());

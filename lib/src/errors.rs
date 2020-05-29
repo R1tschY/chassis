@@ -1,15 +1,15 @@
 use crate::Key;
+use std::fmt;
 
+#[derive(Debug)]
 pub enum ChassisError {
     MissingImplementation(Key),
     // CyclicDependency(Vec<Dependency>),
     // CreateError(Box<dyn Error>),
 }
 
-
-
 pub struct Errors {
-    errors: Vec<ChassisError>
+    errors: Vec<ChassisError>,
 }
 
 impl Errors {
@@ -22,5 +22,10 @@ impl Errors {
     }
 }
 
+impl fmt::Debug for Errors {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(&self.errors).finish()
+    }
+}
 
-// type ChassisResult<T> = Result<T, Errors>;
+pub type ChassisResult<T> = Result<T, Errors>;

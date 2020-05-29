@@ -1,7 +1,7 @@
 use crate::bind::binder::RecordedBinding;
 use crate::errors::{ChassisError, Errors};
 use crate::meta::Binding;
-use crate::Key;
+use crate::{ChassisResult, Key};
 use std::collections::HashMap;
 
 pub struct Linker {
@@ -33,12 +33,12 @@ impl Linker {
         }
     }
 
-    pub fn link(mut self) -> LinkedBindings {
+    pub fn link(mut self) -> ChassisResult<LinkedBindings> {
         self.check_for_missing();
 
-        LinkedBindings {
+        Ok(LinkedBindings {
             bindings: self.bindings,
-        }
+        })
     }
 
     pub fn check_for_missing(&mut self) {

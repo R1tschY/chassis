@@ -36,7 +36,7 @@ impl Module for TestModule {
 
 #[test]
 fn inject_function_resolve() {
-    let injector = Injector::from_module(TestModule);
+    let injector = Injector::from_module(TestModule).unwrap();
 
     assert!(injector.contains_type::<Class2>());
     assert_matches!(injector.resolve_type::<Class2>(), Some(_))

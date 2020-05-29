@@ -8,7 +8,7 @@ use crate::config::injection_point::InjectionPoint;
 use crate::factory::{
     to_any_factory, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
 };
-use crate::{AnyFactoryRef, BindAnnotation, Injector, Key, Module};
+use crate::{AnyFactoryRef, BindAnnotation, ChassisResult, Injector, Key, Module};
 
 pub struct Binder {
     recorded: Vec<RecordedBinding>,
@@ -37,7 +37,7 @@ impl Binder {
         module.configure(self)
     }
 
-    pub(crate) fn link(self) -> LinkedBindings {
+    pub(crate) fn link(self) -> ChassisResult<LinkedBindings> {
         Linker::new(self.recorded).link()
     }
 }

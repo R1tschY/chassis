@@ -33,7 +33,7 @@ impl DDModule {
 }
 
 fn main() {
-    let injector = Injector::builder().module(DDModule).build();
+    let injector = Injector::builder().module(DDModule).build().unwrap();
 
     injector
         .resolve_type::<Dummy>()

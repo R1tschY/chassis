@@ -48,7 +48,7 @@ impl Module {
 
 #[test]
 fn inject_function_resolve() {
-    let injector = Injector::from_module(Module);
+    let injector = Injector::from_module(Module).unwrap();
 
     assert!(injector.contains_type::<Class3>());
     assert_matches!(injector.resolve_type::<Class3>(), Some(_))
@@ -56,7 +56,7 @@ fn inject_function_resolve() {
 
 #[test]
 fn test_debug() {
-    let injector = Injector::from_module(Module);
+    let injector = Injector::from_module(Module).unwrap();
     let binding = injector.get_binding(Key::new::<Class3>()).unwrap();
     println!("member: {}", binding.injection_point().unwrap().member());
 }
