@@ -22,14 +22,8 @@ impl Dummy {
 #[test]
 fn inject_function_resolve() {
     let injector = Injector::from_module(AnonymousModule::new(|binder| {
-        binder.use_binding(Dummy::__injectmeta_new());
+        Dummy::__injectbind_new(binder);
     }));
 
     assert_matches!(injector.resolve_type::<Dummy>(), Some(_));
-}
-
-#[test]
-fn inject_function_meta() {
-    let binding: Binding = Dummy::__injectmeta_new();
-    assert_eq!(Key::new::<Dummy>(), binding.key())
 }

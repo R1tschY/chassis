@@ -3,11 +3,11 @@ use proc_macro::TokenStream;
 use crate::sig::{process_sig, InjectFn, WrapperType};
 use crate::syn_ext::IdentExt;
 use proc_macro2::{Ident, Span};
-use syn::Expr;
 use syn::parse::{Parse, ParseBuffer, ParseStream};
 use syn::token::Token;
+use syn::Expr;
 
-pub const INJECT_META_PREFIX: &str = "__injectmeta_";
+pub const INJECT_META_PREFIX: &str = "__injectbind_";
 pub const INJECT_PREFIX: &str = "__inject_";
 
 struct KeyAttributeMeta(Expr);
@@ -20,7 +20,6 @@ impl Parse for KeyAttributeMeta {
         Ok(Self(expr))
     }
 }
-
 
 pub fn factory(input: TokenStream) -> TokenStream {
     let mut path: syn::Path = syn::parse(input).unwrap();
@@ -37,11 +36,11 @@ pub fn factory(input: TokenStream) -> TokenStream {
 pub fn inject(input: TokenStream) -> TokenStream {
     let mut function: syn::ImplItemMethod = parse_macro_input!(input as syn::ImplItemMethod);
     let sig: InjectFn = process_sig(&mut function.sig);
-    codegen_classfn(&function, sig)
+    codegen_classfn(Span::call_site(), &function, sig)
 }
 
-fn codegen_classfn(userfn: &syn::ImplItemMethod, sig: InjectFn) -> TokenStream {
-    let injectfns = codegen_injectfns(&sig, true);
+fn codegen_classfn(span: Span, userfn: &syn::ImplItemMethod, sig: InjectFn) -> TokenStream {
+    let injectfns = codegen_injectfns(span, &sig, true);
 
     let code = quote! {
         #userfn
@@ -51,7 +50,11 @@ fn codegen_classfn(userfn: &syn::ImplItemMethod, sig: InjectFn) -> TokenStream {
     code.into()
 }
 
-pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::TokenStream {
+pub fn codegen_injectfns(
+    span: Span,
+    sig: &InjectFn,
+    return_self: bool,
+) -> proc_macro2::TokenStream {
     let userfn_name = &sig.name;
     let userfn_name_str = sig.name.to_string();
     let injectfn_name = userfn_name.prepend(INJECT_PREFIX);
@@ -75,21 +78,29 @@ pub fn codegen_injectfns(sig: &InjectFn, return_self: bool) -> proc_macro2::Toke
     }
 
     let factory = match &sig.output.wrapper {
-        Some(WrapperType::Arc) => "from_arc_factory",
-        Some(WrapperType::Box) => "from_box_factory",
-        None => "from_factory",
+        Some(WrapperType::Arc) => "to_arc_factory",
+        Some(WrapperType::Box) => "to_box_factory",
+        None => "to_factory",
     };
     let factory_ident = Ident::new(factory, Span::call_site());
+    let rty_token = if return_self {
+        quote! { Self }
+    } else {
+        let rty = &sig.output.ty;
+        quote! { #rty }
+    };
 
-    let code_metafn = quote! {
-        pub fn #metafn_name() -> chassis::meta::Binding {
+    let code_metafn = quote_spanned! {span=>
+        pub fn #metafn_name(__binder__: &mut chassis::Binder) {
             use chassis::Named;
 
-            chassis::meta::Binding::#factory_ident(
-                Self::#injectfn_name,
-                chassis::meta::InjectionPoint::for_module_function(
-                    #userfn_name_str,
-                    &[ #(#dep_keys),* ],
+            __binder__
+                .bind::<#rty_token>()
+                .#factory_ident(
+                    Self::#injectfn_name,
+                    chassis::meta::InjectionPoint::for_module_function(
+                        #userfn_name_str,
+                        &[ #(#dep_keys),* ],
                 )
             )
         }

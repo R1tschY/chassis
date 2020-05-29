@@ -15,46 +15,6 @@ pub struct Binding {
 }
 
 impl Binding {
-    pub fn from_arc_factory<U, T>(factory: U, injection_point: InjectionPoint) -> Self
-    where
-        U: Fn(&Injector) -> Arc<T> + 'static,
-        T: ?Sized + 'static,
-    {
-        Self::from_any_factory::<T>(
-            Arc::new(AnyFactoryImpl::new(ArcCreatingFactory(factory))),
-            injection_point,
-        )
-    }
-
-    pub fn from_box_factory<U, T>(factory: U, injection_point: InjectionPoint) -> Self
-    where
-        U: Fn(&Injector) -> Box<T> + 'static,
-        T: ?Sized + 'static,
-    {
-        Self::from_any_factory::<T>(
-            Arc::new(AnyFactoryImpl::new(BoxCreatingFactory(factory))),
-            injection_point,
-        )
-    }
-
-    pub fn from_factory<U, T>(factory: U, injection_point: InjectionPoint) -> Self
-    where
-        U: Fn(&Injector) -> T + 'static,
-        T: 'static,
-    {
-        Self::from_any_factory::<T>(
-            Arc::new(AnyFactoryImpl::new(CreatingFactory(factory))),
-            injection_point,
-        )
-    }
-
-    fn from_any_factory<T: ?Sized + 'static>(
-        factory: AnyFactoryRef,
-        injection_point: InjectionPoint,
-    ) -> Self {
-        Self::new(factory, Some(injection_point), Key::new::<T>())
-    }
-
     pub(crate) fn new(
         factory: AnyFactoryRef,
         injection_point: Option<InjectionPoint>,

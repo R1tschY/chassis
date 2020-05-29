@@ -20,13 +20,11 @@ impl LinkedBindings {
 }
 
 impl Linker {
-    pub(crate) fn new(mut bindings: Vec<Binding>, recorded: Vec<RecordedBinding>) -> Self {
-        let mut recorded_bindings: Vec<Binding> =
-            recorded.into_iter().map(|binding| binding.into()).collect();
-        bindings.append(&mut recorded_bindings);
-        let binding_map = bindings
+    pub(crate) fn new(recorded: Vec<RecordedBinding>) -> Self {
+        let binding_map = recorded
             .into_iter()
-            .map(|binding| (binding.key(), binding))
+            .map(|binding| binding.into())
+            .map(|binding: Binding| (binding.key(), binding))
             .collect();
 
         Self {

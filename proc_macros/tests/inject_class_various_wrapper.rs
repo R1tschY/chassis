@@ -32,8 +32,8 @@ struct TestModule;
 
 impl Module for TestModule {
     fn configure(&self, binder: &mut Binder) {
-        binder.use_binding(Class1::__injectmeta_new());
-        binder.use_binding(Class2::__injectmeta_new());
+        Class1::__injectbind_new(binder);
+        Class2::__injectbind_new(binder);
     }
 }
 

@@ -26,14 +26,14 @@ pub fn module(input: TokenStream) -> TokenStream {
     // codegen
     let inject_fns: Vec<_> = functions
         .iter()
-        .map(|function| codegen_injectfns(function, false))
+        .map(|function| codegen_injectfns(function.name.span(), function, false))
         .collect();
     let bindings: Vec<_> = functions
         .iter()
         .map(|function| {
             let meta_fn = function.name.prepend(INJECT_META_PREFIX);
             quote! {
-                __binder__.use_binding(Self::#meta_fn());
+                Self::#meta_fn(__binder__);
             }
         })
         .collect();

@@ -1,40 +1,33 @@
 use std::marker::PhantomData;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::process::Command;
 use std::sync::Arc;
 
 use crate::bind::binding::Binding;
 use crate::bind::linker::{LinkedBindings, Linker};
 use crate::config::injection_point::InjectionPoint;
-use crate::factory::ConstantFactory;
-use crate::{AnyFactoryImpl, AnyFactoryRef, BindAnnotation, Key, Module};
+use crate::factory::{ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory};
+use crate::{AnyFactoryImpl, AnyFactoryRef, BindAnnotation, Injector, Key, Module};
 
 pub struct Binder {
-    ready: Vec<Binding>,
     recorded: Vec<RecordedBinding>,
 }
 
 impl Binder {
     pub(crate) fn new() -> Self {
         Self {
-            ready: Vec::new(),
             recorded: Vec::new(),
         }
     }
 
-    pub fn bind<T: ?Sized + 'static>(&mut self) -> BindingBuilder<T> {
+    pub fn bind<T: ?Sized + 'static>(&mut self) -> AnnotatedBindingBuilder<T> {
         let pos = self.bind_any(RecordedBinding::new::<T>());
-        BindingBuilder::new(self, pos)
+        AnnotatedBindingBuilder::new(self, pos)
     }
 
     fn bind_any(&mut self, binding: RecordedBinding) -> usize {
         self.recorded.push(binding);
         self.recorded.len() - 1
-    }
-
-    /// TODO: deprecated: refactor to use Binder interface
-    pub fn use_binding(&mut self, binding: Binding) {
-        self.ready.push(binding);
     }
 
     /// Install a Module
@@ -44,7 +37,7 @@ impl Binder {
     }
 
     pub(crate) fn link(self) -> LinkedBindings {
-        Linker::new(self.ready, self.recorded).link()
+        Linker::new(self.recorded).link()
     }
 }
 
@@ -81,10 +74,20 @@ pub struct BindingBuilder<'a, T: ?Sized + 'static> {
 }
 
 impl<'a, T: 'static> BindingBuilder<'a, T> {
-    pub fn to_instance(mut self, instance: T) {
+    pub fn to_instance(&mut self, instance: T) {
         self.set_factory(Arc::new(AnyFactoryImpl::new(ConstantFactory(Arc::new(
             instance,
         )))));
+    }
+
+    pub fn to_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
+    where
+        U: Fn(&Injector) -> T + 'static,
+    {
+        self.to_any_factory(
+            Arc::new(AnyFactoryImpl::new(CreatingFactory(factory))),
+            injection_point,
+        )
     }
 }
 
@@ -97,7 +100,32 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         }
     }
 
-    pub fn to_arc_instance(mut self, instance: Arc<T>) {
+    pub fn to_arc_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
+    where
+        U: Fn(&Injector) -> Arc<T> + 'static,
+    {
+        self.to_any_factory(
+            Arc::new(AnyFactoryImpl::new(ArcCreatingFactory(factory))),
+            injection_point,
+        )
+    }
+
+    pub fn to_box_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
+    where
+        U: Fn(&Injector) -> Box<T> + 'static,
+    {
+        self.to_any_factory(
+            Arc::new(AnyFactoryImpl::new(BoxCreatingFactory(factory))),
+            injection_point,
+        )
+    }
+
+    fn to_any_factory(&mut self, factory: AnyFactoryRef, injection_point: InjectionPoint) {
+        self.set_factory(factory);
+        self.set_injection_point(injection_point);
+    }
+
+    pub fn to_arc_instance(&mut self, instance: Arc<T>) {
         self.set_factory(Arc::new(AnyFactoryImpl::new(ConstantFactory(instance))));
     }
 
@@ -133,5 +161,11 @@ impl<'a, T: ?Sized + 'static> Deref for AnnotatedBindingBuilder<'a, T> {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl<'a, T: ?Sized + 'static> DerefMut for AnnotatedBindingBuilder<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
