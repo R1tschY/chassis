@@ -6,7 +6,9 @@ use std::sync::Arc;
 use crate::bind::binding::Binding;
 use crate::bind::linker::{LinkedBindings, Linker};
 use crate::config::injection_point::InjectionPoint;
-use crate::factory::{ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory};
+use crate::factory::{
+    to_any_factory, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
+};
 use crate::{AnyFactoryImpl, AnyFactoryRef, BindAnnotation, Injector, Key, Module};
 
 pub struct Binder {
@@ -75,19 +77,14 @@ pub struct BindingBuilder<'a, T: ?Sized + 'static> {
 
 impl<'a, T: 'static> BindingBuilder<'a, T> {
     pub fn to_instance(&mut self, instance: T) {
-        self.set_factory(Arc::new(AnyFactoryImpl::new(ConstantFactory(Arc::new(
-            instance,
-        )))));
+        self.set_factory(to_any_factory(ConstantFactory(Arc::new(instance))));
     }
 
     pub fn to_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
     where
         U: Fn(&Injector) -> T + 'static,
     {
-        self.to_any_factory(
-            Arc::new(AnyFactoryImpl::new(CreatingFactory(factory))),
-            injection_point,
-        )
+        self.to_any_factory(to_any_factory(CreatingFactory(factory)), injection_point)
     }
 }
 
@@ -104,20 +101,14 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
     where
         U: Fn(&Injector) -> Arc<T> + 'static,
     {
-        self.to_any_factory(
-            Arc::new(AnyFactoryImpl::new(ArcCreatingFactory(factory))),
-            injection_point,
-        )
+        self.to_any_factory(to_any_factory(ArcCreatingFactory(factory)), injection_point)
     }
 
     pub fn to_box_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
     where
         U: Fn(&Injector) -> Box<T> + 'static,
     {
-        self.to_any_factory(
-            Arc::new(AnyFactoryImpl::new(BoxCreatingFactory(factory))),
-            injection_point,
-        )
+        self.to_any_factory(to_any_factory(BoxCreatingFactory(factory)), injection_point)
     }
 
     fn to_any_factory(&mut self, factory: AnyFactoryRef, injection_point: InjectionPoint) {
@@ -126,7 +117,7 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
     }
 
     pub fn to_arc_instance(&mut self, instance: Arc<T>) {
-        self.set_factory(Arc::new(AnyFactoryImpl::new(ConstantFactory(instance))));
+        self.set_factory(to_any_factory(ConstantFactory(instance)));
     }
 
     fn set_injection_point(&mut self, injection_point: InjectionPoint) {

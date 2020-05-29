@@ -31,15 +31,15 @@ pub(crate) trait AnyFactory {
 
 pub(crate) type AnyFactoryRef = Arc<dyn AnyFactory>;
 
-pub(crate) struct AnyFactoryImpl<T: ?Sized + 'static>(Arc<dyn Factory<T>>);
-
-impl<T: ?Sized + 'static> AnyFactoryImpl<T> {
-    pub fn new(factory: impl Factory<T> + 'static) -> Self {
-        Self(Arc::new(factory))
-    }
+pub(crate) fn to_any_factory<T: ?Sized + 'static, U: Factory<T> + 'static>(
+    other: U,
+) -> AnyFactoryRef {
+    Arc::new(AnyFactoryImpl::<T, U>(other, PhantomData))
 }
 
-impl<T: ?Sized + 'static> AnyFactory for AnyFactoryImpl<T> {
+pub(crate) struct AnyFactoryImpl<T: ?Sized + 'static, U: Factory<T> + 'static>(U, PhantomData<T>);
+
+impl<T: ?Sized + 'static, U: Factory<T> + 'static> AnyFactory for AnyFactoryImpl<T, U> {
     fn load(&self, service_locator: &Injector) -> Box<dyn Any> {
         Box::new(self.0.load(service_locator))
     }
