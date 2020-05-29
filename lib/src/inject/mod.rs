@@ -4,9 +4,9 @@ use std::sync::Arc;
 
 use crate::bind::binding::Binding;
 use crate::inject::builder::InjectorBuilder;
+use crate::key::TypedKey;
 use crate::resolve::ResolveFrom;
 use crate::{Binder, Key, Module, Provider};
-use crate::key::TypedKey;
 
 pub mod builder;
 pub mod context;
@@ -117,15 +117,14 @@ mod tests {
     #[derive(Eq, PartialEq, Debug)]
     struct Impl2();
 
-    /*
     #[test]
     fn test_resolve_existing_struct() {
         let locator = Injector::from_module(AnonymousModule::new(|mut binder| {
             binder.bind::<Impl1>().to_instance(Impl1());
         }));
 
-        assert_eq!(Some(Arc::new(Impl1())), locator.resolve::<Impl1>());
-        assert_matches!(locator.resolve::<dyn Interface1>(), None);
+        assert_eq!(Some(Arc::new(Impl1())), locator.resolve_type::<Impl1>());
+        assert_matches!(locator.resolve_type::<dyn Interface1>(), None);
     }
 
     #[test]
@@ -136,17 +135,17 @@ mod tests {
                 .to_arc_instance(Arc::new(Impl1()));
         }));
 
-        assert_matches!(locator.resolve::<dyn Interface1>(), Some(_));
-        assert_eq!(None, locator.resolve::<Impl1>());
+        assert_matches!(locator.resolve_type::<dyn Interface1>(), Some(_));
+        assert_eq!(None, locator.resolve_type::<Impl1>());
     }
 
     #[test]
     fn test_resolve_nonexisting() {
         let locator = Injector::from_binder(Binder::new());
 
-        assert_matches!(locator.resolve::<dyn Interface1>(), None);
-        assert_eq!(None, locator.resolve::<Impl1>());
-    }*/
+        assert_matches!(locator.resolve_type::<dyn Interface1>(), None);
+        assert_eq!(None, locator.resolve_type::<Impl1>());
+    }
 
     /*    #[test]
     fn it_works() {

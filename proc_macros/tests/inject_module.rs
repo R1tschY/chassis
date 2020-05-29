@@ -61,5 +61,5 @@ fn inject_function_resolve() {
 fn test_debug() {
     let injector = Injector::from_module(Module);
     let binding = injector.get_binding(Key::new::<Class3>()).unwrap();
-    println!("member: {}", binding.injection_point().member());
+    println!("member: {}", binding.injection_point().unwrap().member());
 }

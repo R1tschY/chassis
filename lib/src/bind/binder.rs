@@ -1,30 +1,40 @@
+use std::marker::PhantomData;
+use std::ops::Deref;
+use std::process::Command;
+use std::sync::Arc;
+
 use crate::bind::binding::Binding;
 use crate::bind::linker::{LinkedBindings, Linker};
-use crate::{Module};
+use crate::config::injection_point::InjectionPoint;
+use crate::factory::ConstantFactory;
+use crate::{AnyFactoryImpl, AnyFactoryRef, BindAnnotation, Key, Module};
 
 pub struct Binder {
-    bindings: Vec<Binding>,
+    ready: Vec<Binding>,
+    recorded: Vec<RecordedBinding>,
 }
 
 impl Binder {
     pub(crate) fn new() -> Self {
         Self {
-            bindings: Vec::new(),
+            ready: Vec::new(),
+            recorded: Vec::new(),
         }
     }
 
-    /*    pub fn bind<T: ?Sized + 'static>(&mut self) -> BindingBuilder<T> {
-        let pos = self.bind_any(RecordedBinding::untargeted(Key::for_type::<T>()));
+    pub fn bind<T: ?Sized + 'static>(&mut self) -> BindingBuilder<T> {
+        let pos = self.bind_any(RecordedBinding::new::<T>());
         BindingBuilder::new(self, pos)
     }
 
     fn bind_any(&mut self, binding: RecordedBinding) -> usize {
-        self.bindings.push(binding);
-        self.bindings.len() - 1
-    }*/
+        self.recorded.push(binding);
+        self.recorded.len() - 1
+    }
 
+    /// TODO: deprecated: refactor to use Binder interface
     pub fn use_binding(&mut self, binding: Binding) {
-        self.bindings.push(binding);
+        self.ready.push(binding);
     }
 
     /// Install a Module
@@ -34,25 +44,51 @@ impl Binder {
     }
 
     pub(crate) fn link(self) -> LinkedBindings {
-        Linker::new(self.bindings).link()
+        Linker::new(self.ready, self.recorded).link()
     }
 }
 
-/*pub struct BindingBuilder<'a, T: ?Sized + 'static> {
+pub(crate) struct RecordedBinding {
+    factory: Option<AnyFactoryRef>,
+    injection_point: Option<InjectionPoint>,
+    key: Key,
+}
+
+impl RecordedBinding {
+    pub fn new<T: ?Sized + 'static>() -> Self {
+        Self {
+            factory: None,
+            injection_point: None,
+            key: Key::new::<T>(),
+        }
+    }
+}
+
+impl From<RecordedBinding> for Binding {
+    fn from(other: RecordedBinding) -> Self {
+        Binding::new(
+            other.factory.expect("Untargetted binding found"),
+            other.injection_point,
+            other.key,
+        )
+    }
+}
+
+pub struct BindingBuilder<'a, T: ?Sized + 'static> {
     binder: &'a mut Binder,
     pos: usize,
     key: PhantomData<T>,
 }
 
 impl<'a, T: 'static> BindingBuilder<'a, T> {
-    pub fn to_instance(&mut self, instance: T) {
-        self.set_target(Arc::new(AnyFactoryImpl::new(ConstantFactory(Arc::new(
+    pub fn to_instance(mut self, instance: T) {
+        self.set_factory(Arc::new(AnyFactoryImpl::new(ConstantFactory(Arc::new(
             instance,
         )))));
     }
-}*/
+}
 
-/*impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
+impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
     fn new(binder: &'a mut Binder, pos: usize) -> Self {
         Self {
             binder,
@@ -61,32 +97,41 @@ impl<'a, T: 'static> BindingBuilder<'a, T> {
         }
     }
 
-    pub fn to_arc_instance(&mut self, instance: Arc<T>) {
-        self.set_target(Arc::new(AnyFactoryImpl::new(ConstantFactory(instance))));
+    pub fn to_arc_instance(mut self, instance: Arc<T>) {
+        self.set_factory(Arc::new(AnyFactoryImpl::new(ConstantFactory(instance))));
     }
 
-    fn set_target(&mut self, factory: AnyFactoryRef) {
-        self.binder.bindings[self.pos].set_target(factory);
+    fn set_injection_point(&mut self, injection_point: InjectionPoint) {
+        self.binder.recorded[self.pos].injection_point = Some(injection_point);
     }
-}*/
 
-/*pub(crate) struct RecordedBinding {
-    binding: Binding,
+    fn set_factory(&mut self, factory: AnyFactoryRef) {
+        self.binder.recorded[self.pos].factory = Some(factory);
+    }
+
+    fn set_annotation<U: BindAnnotation>(&mut self, annotation: U) {
+        let key = &mut self.binder.recorded[self.pos].key;
+        *key = key.clone().with_annotation(annotation);
+    }
 }
 
-impl RecordedBinding {
-    pub fn untargeted(key: Key) -> Self {
-        Self { key, target: None }
+pub struct AnnotatedBindingBuilder<'a, T: ?Sized + 'static>(BindingBuilder<'a, T>);
+
+impl<'a, T: ?Sized + 'static> AnnotatedBindingBuilder<'a, T> {
+    fn new(binder: &'a mut Binder, pos: usize) -> Self {
+        Self(BindingBuilder::new(binder, pos))
     }
 
-    pub fn set_target(&mut self, factory: AnyFactoryRef) {
-        self.require_untargeted();
-        self.target = Some(factory);
+    pub fn annotated_with<U: BindAnnotation>(&mut self, annotation: U) -> &mut Self {
+        self.0.set_annotation(annotation);
+        self
     }
+}
 
-    pub fn require_untargeted(&self) {
-        if self.target.is_some() {
-            panic!("Implementation is set multiple times");
-        }
+impl<'a, T: ?Sized + 'static> Deref for AnnotatedBindingBuilder<'a, T> {
+    type Target = BindingBuilder<'a, T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
-}*/
+}
