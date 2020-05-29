@@ -20,6 +20,10 @@ impl Errors {
     pub fn add(&mut self, error: ChassisError) {
         self.errors.push(error)
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.errors.is_empty()
+    }
 }
 
 impl fmt::Debug for Errors {

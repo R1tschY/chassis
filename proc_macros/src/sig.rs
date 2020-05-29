@@ -3,7 +3,7 @@ use syn::{Attribute, GenericArgument, Ident, PathArguments, PathSegment, Type};
 pub struct InjectFnArg {
     pub name: Option<Ident>,
     pub attr: Option<Attribute>,
-    pub ty: Type,
+    pub ty: InjectType,
 }
 
 pub struct InjectFn {
@@ -13,7 +13,8 @@ pub struct InjectFn {
 }
 
 pub struct InjectType {
-    pub ty: Type,
+    pub outer_ty: Type,
+    pub inner_ty: Type,
     pub wrapper: Option<WrapperType>,
 }
 
@@ -59,7 +60,7 @@ pub fn process_sig(sig: &mut syn::Signature) -> InjectFn {
             InjectFnArg {
                 name: ident,
                 attr: chassis_attrs.into_iter().next(),
-                ty: *ty.clone(),
+                ty: parse_inject_type(ty),
             }
         })
         .collect();
@@ -111,7 +112,8 @@ fn find_wrapper_type(ty: &Type) -> Option<InjectType> {
         };
 
         Some(InjectType {
-            ty: extract_single_generic_arg(seg),
+            outer_ty: ty.clone(),
+            inner_ty: extract_single_generic_arg(seg),
             wrapper: Some(ptr_ty),
         })
     } else {
@@ -124,7 +126,8 @@ fn parse_inject_type(ty: &Type) -> InjectType {
         inject_ptr
     } else {
         InjectType {
-            ty: ty.clone(),
+            outer_ty: ty.clone(),
+            inner_ty: ty.clone(),
             wrapper: None,
         }
     }

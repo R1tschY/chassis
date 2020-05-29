@@ -36,9 +36,13 @@ impl Linker {
     pub fn link(mut self) -> ChassisResult<LinkedBindings> {
         self.check_for_missing();
 
-        Ok(LinkedBindings {
-            bindings: self.bindings,
-        })
+        if self.errors.is_empty() {
+            Ok(LinkedBindings {
+                bindings: self.bindings,
+            })
+        } else {
+            Err(self.errors)
+        }
     }
 
     pub fn check_for_missing(&mut self) {
