@@ -6,7 +6,7 @@ use crate::bind::binding::Binding;
 use crate::inject::builder::InjectorBuilder;
 use crate::key::TypedKey;
 use crate::resolve::ResolveFrom;
-use crate::{Binder, Key, Module, Provider};
+use crate::{BindAnnotation, Binder, Key, Module, Provider};
 
 pub mod builder;
 pub mod context;
@@ -50,9 +50,17 @@ impl Injector {
         self.bindings.contains_key(&key)
     }
 
+    #[inline]
     pub fn resolve_type<T: ?Sized + 'static>(&self) -> Option<Arc<T>> {
-        self.resolve_any(Key::new::<T>().into())
-            .map(|any| *any.downcast::<Arc<T>>().unwrap())
+        self.resolve(TypedKey::<T>::new())
+    }
+
+    #[inline]
+    pub fn resolve_annotated<T: ?Sized + 'static, U: BindAnnotation>(
+        &self,
+        annotation: U,
+    ) -> Option<Arc<T>> {
+        self.resolve(TypedKey::<T>::new_with_annotation(annotation))
     }
 
     pub fn resolve<T: ?Sized + 'static>(&self, key: TypedKey<T>) -> Option<Arc<T>> {
