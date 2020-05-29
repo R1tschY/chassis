@@ -1,10 +1,7 @@
-#[macro_use]
-extern crate assert_matches;
-#[macro_use]
-extern crate chassis;
-
 use std::sync::Arc;
 
+use assert_matches::assert_matches;
+use chassis::module;
 use chassis::{Injector, Key};
 
 #[derive(Debug)]

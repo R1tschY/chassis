@@ -1,6 +1,4 @@
-#[macro_use]
-extern crate chassis;
-
+use chassis::module;
 use chassis::Injector;
 
 trait ProgressBar {}

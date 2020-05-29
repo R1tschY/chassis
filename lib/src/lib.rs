@@ -1,12 +1,5 @@
-#[cfg(test)]
-#[macro_use]
-extern crate assert_matches;
-#[allow(unused_imports)]
-#[macro_use]
-extern crate chassis_proc_macros;
-
 #[doc(hidden)]
-pub use chassis_proc_macros::*;
+pub use chassis_proc_macros::{factory, inject, module};
 
 pub use crate::bind::annotation::{BindAnnotation, Named};
 pub use crate::bind::binder::Binder;

@@ -104,6 +104,7 @@ impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
 
 #[cfg(test)]
 mod tests {
+    use assert_matches::assert_matches;
     use std::fmt::Debug;
 
     use super::*;

@@ -1,11 +1,5 @@
-// #![feature(trace_macros)]
-// trace_macros!(true);
-
-#[macro_use]
-extern crate assert_matches;
-#[macro_use]
-extern crate chassis;
-
+use assert_matches::assert_matches;
+use chassis::inject;
 use chassis::{AnonymousModule, Injector};
 
 #[derive(Debug)]
