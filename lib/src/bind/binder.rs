@@ -75,10 +75,12 @@ pub struct BindingBuilder<'a, T: ?Sized + 'static> {
 }
 
 impl<'a, T: 'static> BindingBuilder<'a, T> {
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_instance(&mut self, instance: T) {
         self.set_factory(to_any_factory(ConstantFactory(Arc::new(instance))));
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
     where
         U: Fn(&Injector) -> T + 'static,
@@ -96,6 +98,7 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         }
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_arc_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
     where
         U: Fn(&Injector) -> Arc<T> + 'static,
@@ -103,6 +106,7 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         self.to_any_factory(to_any_factory(ArcCreatingFactory(factory)), injection_point)
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_box_factory<U>(&mut self, factory: U, injection_point: InjectionPoint)
     where
         U: Fn(&Injector) -> Box<T> + 'static,
@@ -110,11 +114,13 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         self.to_any_factory(to_any_factory(BoxCreatingFactory(factory)), injection_point)
     }
 
+    #[allow(clippy::wrong_self_convention)]
     fn to_any_factory(&mut self, factory: AnyFactoryRef, injection_point: InjectionPoint) {
         self.set_factory(factory);
         self.set_injection_point(injection_point);
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_arc_instance(&mut self, instance: Arc<T>) {
         self.set_factory(to_any_factory(ConstantFactory(instance)));
     }

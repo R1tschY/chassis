@@ -29,7 +29,7 @@ fn is_chassis_attr(attr: &Attribute) -> bool {
 
 fn drain_where<T: Clone, F: Fn(&T) -> bool>(v: &mut Vec<T>, f: F) -> Vec<T> {
     // TODO: use Vec::drain_filter when stabilised
-    let res: Vec<T> = v.iter().filter(|x| f(x)).map(|x| x.clone()).collect();
+    let res: Vec<T> = v.iter().filter(|x| f(x)).cloned().collect();
     v.retain(|x| !f(x));
     res
 }
@@ -58,7 +58,7 @@ pub fn process_sig(sig: &mut syn::Signature) -> InjectFn {
 
             InjectFnArg {
                 name: ident,
-                attr: chassis_attrs.into_iter().nth(0),
+                attr: chassis_attrs.into_iter().next(),
                 ty: *ty.clone(),
             }
         })

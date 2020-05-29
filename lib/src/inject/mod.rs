@@ -38,7 +38,7 @@ impl Injector {
 
     #[inline]
     pub fn contains_type<T: ?Sized + 'static>(&self) -> bool {
-        self.contains_untyped_key(Key::new::<T>().into())
+        self.contains_untyped_key(Key::new::<T>())
     }
 
     #[inline]

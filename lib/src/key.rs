@@ -54,6 +54,12 @@ impl<T: ?Sized + 'static> TypedKey<T> {
     }
 }
 
+impl<T: ?Sized + 'static> Default for TypedKey<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AnnotationHolder {
     fn new<U: BindAnnotation>(annotation: U) -> Self {
         let debug_annotation = format!("{:?}", &annotation);
@@ -79,7 +85,7 @@ impl Eq for AnnotationHolder {}
 
 impl PartialEq for AnnotationHolder {
     fn eq(&self, other: &Self) -> bool {
-        self.0.type_id() == other.0.type_id() && self.1 == self.1
+        self.0.type_id() == other.0.type_id() && self.1 == other.1
     }
 }
 

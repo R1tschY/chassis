@@ -1,5 +1,5 @@
 use crate::config::dependency::Dependency;
-use crate::{Key};
+use crate::Key;
 use std::any::TypeId;
 
 pub struct InjectionPoint {
@@ -26,7 +26,7 @@ impl InjectionPoint {
     }
 
     pub fn declaring_type(&self) -> Option<TypeId> {
-        self.declaring_type.clone()
+        self.declaring_type
     }
 
     pub fn dependencies(&self) -> &[Dependency] {
