@@ -1,3 +1,5 @@
+#![cfg_attr(nightly_diagnostics, feature(proc_macro_diagnostic, proc_macro_span))]
+
 extern crate proc_macro;
 extern crate proc_macro2;
 #[macro_use]
@@ -9,9 +11,10 @@ use proc_macro::TokenStream;
 
 mod syn_ext;
 
+mod diagnostic;
 mod inject;
 mod module;
-mod sig;
+mod signature;
 
 #[proc_macro]
 pub fn factory(input: TokenStream) -> TokenStream {

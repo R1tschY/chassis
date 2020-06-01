@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use assert_matches::assert_matches;
-use chassis::{module, Binder, Named};
-use chassis::{BindAnnotation, Injector};
+use chassis::Injector;
+use chassis::{module, Binder};
 
 #[derive(Debug, PartialEq)]
 struct Class1(u8);

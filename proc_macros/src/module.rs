@@ -1,14 +1,31 @@
 use proc_macro::TokenStream;
 
+use crate::diagnostic::{Diagnostic, DiagnosticCreator};
 use crate::inject::{codegen_injectfns, INJECT_META_PREFIX};
-use crate::sig::{process_sig, InjectFn};
+use crate::signature::{process_sig, InjectFn};
 use crate::syn_ext::IdentExt;
-use proc_macro::Ident;
 use std::ops::Deref;
-use syn::export::TokenStream2;
+use syn::export::{ToTokens, TokenStream2};
+use syn::spanned::Spanned;
 use syn::{FnArg, Signature, Type};
 
-fn require_configure_signature(sig: &Signature) -> bool {
+fn to_tokens(x: impl ToTokens) -> TokenStream2 {
+    let mut tokens = TokenStream2::new();
+    x.to_tokens(&mut tokens);
+    tokens
+}
+
+fn error_configure_signature(sig: &Signature) -> Diagnostic {
+    sig.span().error(format!(
+        "The signature of the configure function must be \
+         `fn configure(&self, binder: &mut Binder)` or \
+         `fn configure(binder: &mut Binder)`, \
+         got `{}`",
+        to_tokens(sig)
+    ))
+}
+
+fn is_valid_configure_signature(sig: &Signature) -> Option<Diagnostic> {
     let mut has_receiver = false;
 
     // only allow &self
@@ -16,8 +33,10 @@ fn require_configure_signature(sig: &Signature) -> bool {
         if let FnArg::Receiver(receiver) = input {
             has_receiver = true;
             if receiver.mutability.is_some() || receiver.reference.is_none() {
-                // is not &self
-                return false;
+                return Some(
+                    error_configure_signature(sig)
+                        .help_in("receiver is not `&self`", receiver.span()),
+                );
             }
         }
     }
@@ -25,30 +44,34 @@ fn require_configure_signature(sig: &Signature) -> bool {
     // allow only one &mut Binder argument
     if (has_receiver && sig.inputs.len() != 2) || (!has_receiver && sig.inputs.len() != 1) {
         // wrong number of arguments
-        return false;
+        return Some(error_configure_signature(sig).help("wrong number of arguments"));
     }
 
     for input in &sig.inputs {
         if let FnArg::Typed(typed) = input {
             if let Type::Reference(ref_ty) = typed.ty.deref() {
-                if ref_ty.mutability.is_some() {
-                    // argument is not const reference
-                    return false;
+                // TODO: check for Binder type?
+                if ref_ty.mutability.is_none() {
+                    return Some(
+                        error_configure_signature(sig)
+                            .help_in("argument is not mutable reference", ref_ty.span()),
+                    );
                 }
-            // TODO: check for Binder type?
             } else {
-                // argument is not a reference
-                return false;
+                return Some(
+                    error_configure_signature(sig)
+                        .help_in("argument is not a reference", typed.span()),
+                );
             }
         }
     }
 
-    true
+    None
 }
 
 pub fn module(input: TokenStream) -> TokenStream {
     // parse
-    let mut impl_block: syn::ItemImpl = syn::parse(input).unwrap();
+    let mut impl_block: syn::ItemImpl = parse_macro_input!(input);
     assert!(
         impl_block.trait_.is_none(),
         "macro cannot applied to trait impl blocks"
@@ -82,13 +105,9 @@ pub fn module(input: TokenStream) -> TokenStream {
         })
         .collect();
     let user_configure = if let Some(sig) = configure {
-        if !require_configure_signature(&sig) {
-            panic!(
-                "The signature of the configure function must be \
-                 `fn configure(&self, binder: &Binder)` or `fn configure(binder: &Binder)`"
-            );
-        }
-        if sig.receiver().is_some() {
+        if let Some(diag) = is_valid_configure_signature(&sig) {
+            diag.emit()
+        } else if sig.receiver().is_some() {
             quote! { self.configure(__binder__); }
         } else {
             quote! { Self::configure(__binder__); }

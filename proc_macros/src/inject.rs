@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 
-use crate::sig::{process_sig, InjectFn, WrapperType};
+use crate::signature::{process_sig, InjectFn, WrapperType};
 use crate::syn_ext::IdentExt;
 use proc_macro2::{Ident, Span};
 use syn::parse::{Parse, ParseStream};
