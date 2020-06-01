@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use assert_matches::assert_matches;
-use chassis::module;
+use chassis::{module, Binder, Named};
 use chassis::{BindAnnotation, Injector};
 
 #[derive(Debug)]
@@ -22,6 +22,11 @@ impl Module {
         #[chassis(Transactional)] a2: Arc<String>
     ) -> Class1 {
         Class1(a1, a2)
+    }
+
+    fn configure(binder: &mut Binder) {
+        binder.bind::<String>().annotated_with(Named("parameter1")).to_instance("one".into());
+        binder.bind::<String>().annotated_with(Transactional).to_instance("two".into());
     }
 }
 
