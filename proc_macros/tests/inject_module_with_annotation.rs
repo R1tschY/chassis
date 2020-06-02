@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use assert_matches::assert_matches;
 use chassis::{module, Binder, Named};
 use chassis::{BindAnnotation, Injector};
 
-#[derive(Debug)]
-struct Class1(Arc<String>, Arc<String>);
+#[derive(Debug, PartialEq)]
+struct Class1(String, String);
 
 #[derive(Debug)]
 struct Transactional;
@@ -21,7 +20,7 @@ impl Module {
         #[chassis(Named("parameter1"))] a1: Arc<String>,
         #[chassis(Transactional)] a2: Arc<String>
     ) -> Class1 {
-        Class1(a1, a2)
+        Class1(a1.to_string(), a2.to_string())
     }
 
     fn configure(binder: &mut Binder) {
@@ -34,5 +33,8 @@ impl Module {
 fn from_arc() {
     let injector = Injector::from_module(Module).unwrap();
 
-    assert_matches!(injector.resolve_type::<Class1>(), Some(_))
+    assert_eq!(
+        Some(Arc::new(Class1("one".into(), "two".into()))),
+        injector.resolve_type::<Class1>(),
+    )
 }

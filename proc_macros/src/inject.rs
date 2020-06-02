@@ -59,22 +59,23 @@ pub fn codegen_injectfns(
     let injectfn_name = userfn_name.prepend(INJECT_PREFIX);
     let metafn_name = userfn_name.prepend(INJECT_META_PREFIX);
 
-    let resolves = sig.inputs.iter().map(|input| {
-        let ty = &input.ty.outer_ty;
-        quote! { __sl__.resolve_to::<#ty>() }
-    });
-
     let mut dep_keys: Vec<proc_macro2::TokenStream> = vec![];
     for input in &sig.inputs {
         let ty = &input.ty.inner_ty;
         let tokens = if let Some(annotation) = &input.attr {
             let KeyAttributeMeta(expr) = syn::parse2(annotation.tokens.clone()).unwrap();
-            quote! { chassis::Key::new::<#ty>().with_annotation(#expr) }
+            quote! { chassis::TypedKey::<#ty>::new_with_annotation(#expr) }
         } else {
-            quote! { chassis::Key::new::<#ty>() }
+            quote! { chassis::TypedKey::<#ty>::new() }
         };
         dep_keys.push(tokens);
     }
+
+    let resolves = sig.inputs.iter().zip(&dep_keys).map(|(input, key)| {
+        let inner_ty = &input.ty.inner_ty;
+        let outer_ty = &input.ty.outer_ty;
+        quote! { __sl__.resolve_to::<#inner_ty, #outer_ty>(#key) }
+    });
 
     let factory = match &sig.output.wrapper {
         Some(WrapperType::Arc) => "to_arc_factory",
@@ -100,7 +101,7 @@ pub fn codegen_injectfns(
                     Self::#injectfn_name,
                     chassis::meta::InjectionPoint::for_module_function(
                         #userfn_name_str,
-                        &[ #(#dep_keys),* ],
+                        &[ #(#dep_keys.into()),* ],
                 )
             )
         }

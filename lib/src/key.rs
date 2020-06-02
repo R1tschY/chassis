@@ -20,7 +20,7 @@ pub struct Key {
 }
 
 /// Typed version of `Key`.
-#[derive(Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq)]
 pub struct TypedKey<T: ?Sized + 'static>(Key, PhantomData<T>);
 
 #[derive(Clone)]
@@ -132,6 +132,12 @@ impl<T: ?Sized + 'static> fmt::Debug for TypedKey<T> {
         f.debug_tuple(&format!("TypedKey<{}>", self.type_name()))
             .field(&self.annotation_debug())
             .finish()
+    }
+}
+
+impl<T: ?Sized + 'static> Clone for TypedKey<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone(), PhantomData)
     }
 }
 

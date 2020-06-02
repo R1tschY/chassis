@@ -8,7 +8,7 @@ pub use crate::errors::{ChassisError, ChassisResult, Errors};
 pub(crate) use crate::factory::AnyFactoryRef;
 pub use crate::helper::*;
 pub use crate::inject::Injector;
-pub use crate::key::Key;
+pub use crate::key::{Key, TypedKey};
 pub use crate::provider::{Provider, ProviderPtr};
 pub use crate::scope::Scope;
 

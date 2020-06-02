@@ -1,43 +1,28 @@
 use std::sync::Arc;
 
 use assert_matches::assert_matches;
-use chassis::inject;
-use chassis::Module;
-use chassis::{Binder, Injector};
-
-#[derive(Debug, Clone)]
-struct Class1();
-
-impl Class1 {
-    #[inject]
-    pub fn new() -> Self {
-        Self()
-    }
-}
+use chassis::Injector;
+use chassis::{inject, AnonymousModule};
 
 #[derive(Debug)]
-struct Class2();
+struct Class;
 
-impl Class2 {
+impl Class {
     #[inject]
-    pub fn new(_: Arc<Class1>, _: Option<Arc<Class1>> /*, _: ProviderPtr<Class1>*/) -> Self {
-        Self()
-    }
-}
-
-struct TestModule;
-
-impl Module for TestModule {
-    fn configure(&self, binder: &mut Binder) {
-        Class1::__injectbind_new(binder);
-        Class2::__injectbind_new(binder);
+    pub fn new(arc: Arc<u8> /*option: Option<Arc<u8>> , _: ProviderPtr<u8>*/) -> Self {
+        assert_eq!(42, *arc);
+        // assert_eq!(Some(42), option);
+        Self
     }
 }
 
 #[test]
 fn inject_function_resolve() {
-    let injector = Injector::from_module(TestModule).unwrap();
+    let injector = Injector::from_module(AnonymousModule::new(|binder| {
+        binder.bind::<u8>().to_instance(42);
+        Class::__injectbind_new(binder);
+    }))
+    .unwrap();
 
-    assert!(injector.contains_type::<Class2>());
-    assert_matches!(injector.resolve_type::<Class2>(), Some(_))
+    assert_matches!(injector.resolve_type::<Class>(), Some(_))
 }

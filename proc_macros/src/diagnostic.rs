@@ -51,6 +51,8 @@ impl Diagnostic {
 
     #[cfg(not(nightly_diagnostics))]
     pub fn emit(self) -> proc_macro2::TokenStream {
+        use std::convert::TryInto;
+
         let err: Result<syn::parse::Error, ()> = self.try_into();
         if let Ok(err) = err {
             err.to_compile_error()

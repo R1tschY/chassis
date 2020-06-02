@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use crate::Injector;
+use crate::Key;
 
-pub trait ResolveFrom {
-    fn resolve_from(_: &Injector) -> Self;
+/// Resolve result into
+pub trait ResolveInto<T: ?Sized + 'static> {
+    fn resolve_into(result: Option<Arc<T>>, key: &Key) -> Self;
 }
 
 // impl<T: ?Sized + Clone + 'static> ResolveFrom for ProviderPtr<T> {
@@ -12,14 +13,14 @@ pub trait ResolveFrom {
 //     }
 // }
 
-impl<T: ?Sized + 'static> ResolveFrom for Arc<T> {
-    fn resolve_from(scope: &Injector) -> Self {
-        scope.resolve_type().unwrap()
+impl<T: ?Sized + 'static> ResolveInto<T> for Arc<T> {
+    fn resolve_into(result: Option<Arc<T>>, key: &Key) -> Self {
+        result.expect(&format!("Failed to resolve {:?}", key))
     }
 }
 
-impl<T: ?Sized + 'static> ResolveFrom for Option<Arc<T>> {
-    fn resolve_from(scope: &Injector) -> Self {
-        scope.resolve_type()
+impl<T: ?Sized + 'static> ResolveInto<T> for Option<Arc<T>> {
+    fn resolve_into(result: Option<Arc<T>>, _key: &Key) -> Self {
+        result
     }
 }

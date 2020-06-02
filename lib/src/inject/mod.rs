@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::bind::binding::Binding;
 use crate::inject::builder::InjectorBuilder;
 use crate::key::TypedKey;
-use crate::resolve::ResolveFrom;
+use crate::resolve::ResolveInto;
 use crate::{BindAnnotation, Binder, ChassisResult, Key, Module, Provider};
 
 pub mod builder;
@@ -80,8 +80,8 @@ impl Injector {
     }
 
     #[inline]
-    pub fn resolve_to<T: ResolveFrom>(&self) -> T {
-        T::resolve_from(self)
+    pub fn resolve_to<T: ?Sized + 'static, U: ResolveInto<T>>(&self, key: TypedKey<T>) -> U {
+        U::resolve_into(self.resolve(TypedKey::clone(&key)), &key)
     }
 
     // #[inline]
