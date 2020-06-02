@@ -10,6 +10,7 @@ pub use crate::helper::*;
 pub use crate::inject::Injector;
 pub use crate::key::{Key, TypedKey};
 pub use crate::provider::{Provider, ProviderPtr};
+pub use crate::resolve::ResolveInto;
 pub use crate::scope::Scope;
 
 mod bind;

@@ -80,7 +80,7 @@ impl Injector {
     }
 
     #[inline]
-    pub fn resolve_to<T: ?Sized + 'static, U: ResolveInto<T>>(&self, key: TypedKey<T>) -> U {
+    pub fn resolve_to<T: ?Sized + 'static, U: ResolveInto<Item = T>>(&self, key: TypedKey<T>) -> U {
         U::resolve_into(self.resolve(TypedKey::clone(&key)), &key)
     }
 

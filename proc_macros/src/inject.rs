@@ -61,20 +61,21 @@ pub fn codegen_injectfns(
 
     let mut dep_keys: Vec<proc_macro2::TokenStream> = vec![];
     for input in &sig.inputs {
-        let ty = &input.ty.inner_ty;
+        let ty = &input.ty.outer_ty;
         let tokens = if let Some(annotation) = &input.attr {
             let KeyAttributeMeta(expr) = syn::parse2(annotation.tokens.clone()).unwrap();
-            quote! { chassis::TypedKey::<#ty>::new_with_annotation(#expr) }
+            quote! {
+                chassis::TypedKey::< <#ty as chassis::ResolveInto>::Item >
+                    ::new_with_annotation(#expr)
+            }
         } else {
-            quote! { chassis::TypedKey::<#ty>::new() }
+            quote! { chassis::TypedKey::< <#ty as chassis::ResolveInto>::Item >::new() }
         };
         dep_keys.push(tokens);
     }
 
     let resolves = sig.inputs.iter().zip(&dep_keys).map(|(input, key)| {
-        let inner_ty = &input.ty.inner_ty;
-        let outer_ty = &input.ty.outer_ty;
-        quote! { __sl__.resolve_to::<#inner_ty, #outer_ty>(#key) }
+        quote! { __sl__.resolve_to(#key) }
     });
 
     let factory = match &sig.output.wrapper {
@@ -92,8 +93,7 @@ pub fn codegen_injectfns(
 
     let code_metafn = quote_spanned! {span=>
         pub fn #metafn_name(__binder__: &mut chassis::Binder) {
-            #[allow(unused_imports)]
-            use chassis::Named;
+            #[allow(unused_imports)] use chassis::Named;
 
             __binder__
                 .bind::<#rty_token>()
@@ -114,15 +114,10 @@ pub fn codegen_injectfns(
             }
         }
     } else {
-        let rty = &sig.output.inner_ty;
+        let rty = &sig.output.outer_ty;
         let body = quote! { Self::#userfn_name(#(#resolves),*) };
         let fn_sig = quote! { pub fn #injectfn_name(__sl__: &chassis::Injector) };
-
-        match &sig.output.wrapper {
-            Some(WrapperType::Arc) => quote! { #fn_sig -> Arc<#rty> { #body } },
-            Some(WrapperType::Box) => quote! { #fn_sig -> Box<#rty> { #body } },
-            None => quote! { #fn_sig -> #rty { #body } },
-        }
+        quote! { #fn_sig -> #rty { #body } }
     };
 
     quote! {
