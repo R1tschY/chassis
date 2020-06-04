@@ -74,7 +74,7 @@ pub fn codegen_injectfns(
         dep_keys.push(tokens);
     }
 
-    let resolves = sig.inputs.iter().zip(&dep_keys).map(|(input, key)| {
+    let resolves = dep_keys.iter().map(|key| {
         quote! { __sl__.resolve_to(#key) }
     });
 
