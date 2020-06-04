@@ -24,6 +24,7 @@ mod key;
 mod provider;
 mod resolve;
 mod scope;
+mod singleton;
 
 #[doc(hidden)]
 pub mod _internal {

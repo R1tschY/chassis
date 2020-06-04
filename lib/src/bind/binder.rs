@@ -1,5 +1,4 @@
 use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use crate::bind::binding::Binding;
@@ -8,6 +7,7 @@ use crate::config::injection_point::InjectionPoint;
 use crate::factory::{
     to_any_factory, ArcCreatingFactory, BoxCreatingFactory, ConstantFactory, CreatingFactory,
 };
+use crate::scope::ScopePtr;
 use crate::{AnyFactoryRef, BindAnnotation, ChassisResult, Injector, Key, Module};
 
 pub struct Binder {
@@ -21,9 +21,9 @@ impl Binder {
         }
     }
 
-    pub fn bind<T: ?Sized + 'static>(&mut self) -> AnnotatedBindingBuilder<T> {
+    pub fn bind<T: ?Sized + 'static>(&mut self) -> BindingBuilder<T> {
         let pos = self.bind_any(RecordedBinding::new::<T>());
-        AnnotatedBindingBuilder::new(self, pos)
+        BindingBuilder::new(self, pos)
     }
 
     fn bind_any(&mut self, binding: RecordedBinding) -> usize {
@@ -46,6 +46,7 @@ pub(crate) struct RecordedBinding {
     factory: Option<AnyFactoryRef>,
     injection_point: Option<InjectionPoint>,
     key: Key,
+    scope: Option<ScopePtr>,
 }
 
 impl RecordedBinding {
@@ -54,17 +55,8 @@ impl RecordedBinding {
             factory: None,
             injection_point: None,
             key: Key::new::<T>(),
+            scope: None,
         }
-    }
-}
-
-impl From<RecordedBinding> for Binding {
-    fn from(other: RecordedBinding) -> Self {
-        Binding::new(
-            other.factory.expect("Untargetted binding found"),
-            other.injection_point,
-            other.key,
-        )
     }
 }
 
@@ -133,35 +125,27 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         self.binder.recorded[self.pos].factory = Some(factory);
     }
 
-    fn set_annotation<U: BindAnnotation>(&mut self, annotation: U) {
+    pub fn annotated_with<U: BindAnnotation>(&mut self, annotation: U) -> &mut Self {
         let key = &mut self.binder.recorded[self.pos].key;
         *key = key.clone().with_annotation(annotation);
-    }
-}
-
-pub struct AnnotatedBindingBuilder<'a, T: ?Sized + 'static>(BindingBuilder<'a, T>);
-
-impl<'a, T: ?Sized + 'static> AnnotatedBindingBuilder<'a, T> {
-    fn new(binder: &'a mut Binder, pos: usize) -> Self {
-        Self(BindingBuilder::new(binder, pos))
+        self
     }
 
-    pub fn annotated_with<U: BindAnnotation>(&mut self, annotation: U) -> &mut Self {
-        self.0.set_annotation(annotation);
+    /// specify scope for binding
+    pub fn in_(&mut self, scope: ScopePtr) -> &mut Self {
+        self.binder.recorded[self.pos].scope = Some(scope);
         self
     }
 }
 
-impl<'a, T: ?Sized + 'static> Deref for AnnotatedBindingBuilder<'a, T> {
-    type Target = BindingBuilder<'a, T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<'a, T: ?Sized + 'static> DerefMut for AnnotatedBindingBuilder<'a, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+impl From<RecordedBinding> for Binding {
+    fn from(other: RecordedBinding) -> Self {
+        let factory = other.factory.expect("Untargetted binding found");
+        let factory = if let Some(scope) = other.scope {
+            scope.scope(&other.key, factory)
+        } else {
+            factory
+        };
+        Binding::new(factory, other.injection_point, other.key)
     }
 }

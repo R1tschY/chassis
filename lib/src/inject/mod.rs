@@ -1,8 +1,8 @@
-use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::bind::binding::Binding;
+use crate::factory::Product;
 use crate::inject::builder::InjectorBuilder;
 use crate::key::TypedKey;
 use crate::resolve::ResolveInto;
@@ -64,11 +64,10 @@ impl Injector {
     }
 
     pub fn resolve<T: ?Sized + 'static>(&self, key: TypedKey<T>) -> Option<Arc<T>> {
-        self.resolve_any(key.into())
-            .map(|any| *any.downcast::<Arc<T>>().unwrap())
+        self.resolve_any(key.into()).map(|product| product.unwrap())
     }
 
-    fn resolve_any(&self, key: Key) -> Option<Box<dyn Any>> {
+    fn resolve_any(&self, key: Key) -> Option<Product> {
         self.bindings
             .get(&key)
             .map(|binding| binding.factory().load(self))
@@ -93,11 +92,7 @@ impl Injector {
 
 // TODO: check if T is in Injector before creating a Provider
 impl<'a, T: ?Sized + 'static> Provider<T> for &Injector {
-    fn get(&self) -> Arc<T> {
-        self.resolve_type::<T>().unwrap()
-    }
-
-    fn try_get(&self) -> Option<Arc<T>> {
+    fn get(&self) -> Option<Arc<T>> {
         self.resolve_type::<T>()
     }
 }

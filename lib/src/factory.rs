@@ -24,12 +24,49 @@ pub(crate) trait Factory<T: ?Sized + 'static> {
 
 }*/
 
-/// type erased version of [Factory](chassis::Factory)
-pub(crate) trait AnyFactory {
-    fn load(&self, injector: &Injector) -> Box<dyn Any>;
+/// Interface to type erased form of factory product
+///
+/// Is a interface to Arc<?>.
+trait ProductAny: Any + 'static {
+    fn clone_product(&self) -> Product;
+    fn as_any(self: Box<Self>) -> Box<dyn Any>;
 }
 
-pub(crate) type AnyFactoryRef = Arc<dyn AnyFactory>;
+impl<T: ?Sized + 'static> ProductAny for Arc<T> {
+    fn clone_product(&self) -> Product {
+        Product::new(self.clone())
+    }
+
+    fn as_any(self: Box<Self>) -> Box<dyn Any> {
+        self
+    }
+}
+
+/// Product of a factory
+pub struct Product(Box<dyn ProductAny>); // aka. Box<Arc<?>>
+
+impl Product {
+    pub fn new<T: ?Sized + 'static>(value: Arc<T>) -> Self {
+        Self(Box::new(value))
+    }
+
+    pub fn unwrap<T: ?Sized + 'static>(self) -> Arc<T> {
+        *self.0.as_any().downcast::<Arc<T>>().unwrap()
+    }
+}
+
+impl Clone for Product {
+    fn clone(&self) -> Self {
+        self.0.clone_product()
+    }
+}
+
+/// type erased version of [Factory](chassis::Factory)
+pub trait AnyFactory {
+    fn load(&self, injector: &Injector) -> Product;
+}
+
+pub type AnyFactoryRef = Arc<dyn AnyFactory>;
 
 pub(crate) fn to_any_factory<T: ?Sized + 'static, U: Factory<T> + 'static>(
     other: U,
@@ -40,8 +77,8 @@ pub(crate) fn to_any_factory<T: ?Sized + 'static, U: Factory<T> + 'static>(
 pub(crate) struct AnyFactoryImpl<T: ?Sized + 'static, U: Factory<T> + 'static>(U, PhantomData<T>);
 
 impl<T: ?Sized + 'static, U: Factory<T> + 'static> AnyFactory for AnyFactoryImpl<T, U> {
-    fn load(&self, service_locator: &Injector) -> Box<dyn Any> {
-        Box::new(self.0.load(service_locator))
+    fn load(&self, service_locator: &Injector) -> Product {
+        Product::new(self.0.load(service_locator))
     }
 }
 
