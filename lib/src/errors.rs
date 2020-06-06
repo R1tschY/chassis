@@ -8,6 +8,7 @@ pub enum ChassisError {
     // CreateError(Box<dyn Error>),
 }
 
+#[derive(Default)]
 pub struct Errors {
     errors: Vec<ChassisError>,
 }

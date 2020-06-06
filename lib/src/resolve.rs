@@ -19,7 +19,7 @@ impl<T: ?Sized + 'static> ResolveInto for Arc<T> {
     type Item = T;
 
     fn resolve_into(result: Option<Arc<T>>, key: &Key) -> Self {
-        result.expect(&format!("Failed to resolve {:?}", key))
+        result.unwrap_or_else(|| panic!("Failed to resolve {:?}", key))
     }
 }
 

@@ -15,7 +15,6 @@ use std::marker::Unsize;
 
 #[cfg(nightly_unsize)]
 use crate::factory::ConverterBuilder;
-use std::any::type_name;
 
 pub struct Binder {
     recorded: Vec<RecordedBinding>,
@@ -157,6 +156,7 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
     ///
     /// The other type have to be binded.
     #[cfg(nightly_unsize)]
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_type<U: Unsize<T> + ?Sized + 'static>(&mut self) -> &mut Self {
         self.set_factory(
             to_any_factory(ConverterBuilder::<T, U>::new().build(|x| x)),

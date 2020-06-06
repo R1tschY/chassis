@@ -59,7 +59,7 @@ impl Binding {
 
     /// type of binding used
     pub fn binding_type(&self) -> BindingType {
-        self.binding_type.clone()
+        self.binding_type
     }
 
     /// Dependencies needed to resolve type
