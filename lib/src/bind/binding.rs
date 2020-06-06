@@ -4,10 +4,17 @@ use crate::{AnyFactoryRef, BindAnnotation, Key};
 
 const NO_DEPENDENCIES: &[Dependency] = &[];
 
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum BindingType {
+    Factory,
+    Instance,
+}
+
 /// A binding
 pub struct Binding {
     factory: AnyFactoryRef,
     injection_point: Option<InjectionPoint>,
+    binding_type: BindingType,
     key: Key,
 }
 
@@ -15,11 +22,13 @@ impl Binding {
     pub(crate) fn new(
         factory: AnyFactoryRef,
         injection_point: Option<InjectionPoint>,
+        binding_type: BindingType,
         key: Key,
     ) -> Self {
         Self {
             factory,
             injection_point,
+            binding_type,
             key,
         }
     }
@@ -45,6 +54,11 @@ impl Binding {
     /// Point where dependencies have to be injected to resolve type
     pub fn injection_point(&self) -> Option<&InjectionPoint> {
         self.injection_point.as_ref()
+    }
+
+    /// type of binding used
+    pub fn binding_type(&self) -> BindingType {
+        self.binding_type.clone()
     }
 
     /// Dependencies needed to resolve type

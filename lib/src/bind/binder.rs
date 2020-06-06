@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::bind::binding::Binding;
+use crate::bind::binding::{Binding, BindingType};
 use crate::bind::linker::{LinkedBindings, Linker};
 use crate::config::injection_point::InjectionPoint;
 use crate::factory::{
@@ -46,6 +46,7 @@ pub(crate) struct RecordedBinding {
     factory: Option<AnyFactoryRef>,
     injection_point: Option<InjectionPoint>,
     key: Key,
+    binding_type: Option<BindingType>,
     scope: Option<ScopePtr>,
 }
 
@@ -55,6 +56,7 @@ impl RecordedBinding {
             factory: None,
             injection_point: None,
             key: Key::new::<T>(),
+            binding_type: None,
             scope: None,
         }
     }
@@ -69,7 +71,10 @@ pub struct BindingBuilder<'a, T: ?Sized + 'static> {
 impl<'a, T: 'static> BindingBuilder<'a, T> {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_instance(&mut self, instance: T) {
-        self.set_factory(to_any_factory(ConstantFactory(Arc::new(instance))));
+        self.set_factory(
+            to_any_factory(ConstantFactory(Arc::new(instance))),
+            BindingType::Instance,
+        );
     }
 
     #[allow(clippy::wrong_self_convention)]
@@ -108,20 +113,24 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
 
     #[allow(clippy::wrong_self_convention)]
     fn to_any_factory(&mut self, factory: AnyFactoryRef, injection_point: InjectionPoint) {
-        self.set_factory(factory);
+        self.set_factory(factory, BindingType::Factory);
         self.set_injection_point(injection_point);
     }
 
     #[allow(clippy::wrong_self_convention)]
     pub fn to_arc_instance(&mut self, instance: Arc<T>) {
-        self.set_factory(to_any_factory(ConstantFactory(instance)));
+        self.set_factory(
+            to_any_factory(ConstantFactory(instance)),
+            BindingType::Instance,
+        );
     }
 
     fn set_injection_point(&mut self, injection_point: InjectionPoint) {
         self.binder.recorded[self.pos].injection_point = Some(injection_point);
     }
 
-    fn set_factory(&mut self, factory: AnyFactoryRef) {
+    fn set_factory(&mut self, factory: AnyFactoryRef, binding_type: BindingType) {
+        self.binder.recorded[self.pos].binding_type = Some(binding_type);
         self.binder.recorded[self.pos].factory = Some(factory);
     }
 
@@ -139,13 +148,18 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
 }
 
 impl From<RecordedBinding> for Binding {
-    fn from(other: RecordedBinding) -> Self {
-        let factory = other.factory.expect("Untargetted binding found");
-        let factory = if let Some(scope) = other.scope {
-            scope.scope(&other.key, factory)
+    fn from(recorded: RecordedBinding) -> Self {
+        let factory = recorded.factory.expect("Untargetted binding found");
+        let factory = if let Some(scope) = recorded.scope {
+            scope.scope(&recorded.key, factory)
         } else {
             factory
         };
-        Binding::new(factory, other.injection_point, other.key)
+        Binding::new(
+            factory,
+            recorded.injection_point,
+            recorded.binding_type.unwrap(),
+            recorded.key,
+        )
     }
 }
