@@ -9,7 +9,6 @@ use crate::resolve::ResolveInto;
 use crate::{BindAnnotation, Binder, ChassisResult, Key, Module, Provider};
 
 pub mod builder;
-pub mod context;
 
 /*thread_local!(
     static CONTEXT: RefCell<InjectorContext> = RefCell::new(InjectorContext::new())
