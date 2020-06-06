@@ -1,19 +1,21 @@
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+use crate::debug::{get_type_name, save_type_name};
 use crate::Injector;
-use std::any::Any;
+use std::any::{type_name, Any};
+use std::ops::Deref;
 
 pub(crate) trait Factory<T: ?Sized + 'static> {
     fn load(&self, injector: &Injector) -> Arc<T>;
 
-    fn into_trait_loader<Trait: ?Sized + 'static>(self) -> AsTrait<Trait, T, Self>
-    where
-        Self: Sized,
-        T: Sized,
-    {
-        AsTrait(self, PhantomData, PhantomData)
-    }
+    // fn into_trait_loader<Trait: ?Sized + 'static>(self) -> ConverterFactory<Trait, T, Self>
+    // where
+    //     Self: Sized,
+    //     T: Sized,
+    // {
+    //     ConverterFactory(self, PhantomData, PhantomData)
+    // }
 }
 
 /*impl<T: ?Sized + 'static> dyn Loader<T> {
@@ -51,7 +53,17 @@ impl Product {
     }
 
     pub fn unwrap<T: ?Sized + 'static>(self) -> Arc<T> {
-        *self.0.as_any().downcast::<Arc<T>>().unwrap()
+        match self.0.as_any().downcast::<Arc<T>>() {
+            Ok(result) => *result,
+            Err(wrong) => panic!(
+                "Internal error: tried to resolve {}, got {}",
+                type_name::<Arc<T>>(),
+                get_type_name(wrong.deref().type_id()).map_or_else(
+                    || format!("{:?}", wrong.deref().type_id()),
+                    |result| result.to_string()
+                )
+            ),
+        }
     }
 }
 
@@ -62,6 +74,8 @@ impl Clone for Product {
 }
 
 /// type erased version of [Factory](chassis::Factory)
+///
+/// TODO: make into sealed trait
 pub trait AnyFactory {
     fn load(&self, injector: &Injector) -> Product;
 }
@@ -78,6 +92,8 @@ pub(crate) struct AnyFactoryImpl<T: ?Sized + 'static, U: Factory<T> + 'static>(U
 
 impl<T: ?Sized + 'static, U: Factory<T> + 'static> AnyFactory for AnyFactoryImpl<T, U> {
     fn load(&self, service_locator: &Injector) -> Product {
+        save_type_name::<T>();
+        save_type_name::<Arc<T>>();
         Product::new(self.0.load(service_locator))
     }
 }
@@ -136,23 +152,41 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<T> for AsTrait<T, U, L> {
     }
 }*/
 
-pub(crate) struct AsTrait<T: ?Sized + 'static, U: 'static, L: Factory<U>>(
-    L,
-    PhantomData<U>,
+pub(crate) struct ConverterBuilder<T: ?Sized + 'static, U: ?Sized + 'static>(
     PhantomData<T>,
+    PhantomData<U>,
 );
 
-// impl<T: ?Sized + 'static, U, L: Factory<U>> AsTrait<T, U, L> {
-//     pub fn new(factory: L) -> Self {
-//         Self(factory, PhantomData, PhantomData)
-//     }
-// }
+impl<T: ?Sized + 'static, U: ?Sized + 'static> ConverterBuilder<T, U> {
+    pub fn new() -> Self {
+        Self(PhantomData, PhantomData)
+    }
 
-impl<T: ?Sized + 'static, U, L: Factory<U>> Factory<U> for AsTrait<T, U, L>
+    pub fn build<L>(self, converter: L) -> ConverterFactory<T, U, L>
+    where
+        L: Fn(Arc<U>) -> Arc<T>,
+    {
+        ConverterFactory(converter, PhantomData, PhantomData)
+    }
+}
+
+pub(crate) struct ConverterFactory<T, U, L>(L, PhantomData<U>, PhantomData<T>)
 where
-    Arc<U>: From<Arc<T>>,
+    T: ?Sized + 'static,
+    U: ?Sized + 'static,
+    L: Fn(Arc<U>) -> Arc<T>;
+
+impl<T, U, L> Factory<T> for ConverterFactory<T, U, L>
+where
+    T: ?Sized + 'static,
+    U: ?Sized + 'static,
+    L: Fn(Arc<U>) -> Arc<T>,
 {
-    fn load(&self, injector: &Injector) -> Arc<U> {
-        self.0.load(injector)
+    fn load(&self, injector: &Injector) -> Arc<T> {
+        self.0(
+            injector
+                .resolve_type::<U>()
+                .expect("missing dependencies for linked binding"),
+        )
     }
 }

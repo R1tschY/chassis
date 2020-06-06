@@ -1,3 +1,5 @@
+#![cfg_attr(nightly_unsize, feature(coerce_unsized, unsize))]
+
 #[doc(hidden)]
 pub use chassis_proc_macros::{factory, inject, module};
 
@@ -17,6 +19,7 @@ mod bind;
 mod config;
 mod inject;
 
+mod debug;
 mod errors;
 mod factory;
 mod helper;

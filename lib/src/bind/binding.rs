@@ -8,6 +8,7 @@ const NO_DEPENDENCIES: &[Dependency] = &[];
 pub enum BindingType {
     Factory,
     Instance,
+    Linked,
 }
 
 /// A binding

@@ -10,6 +10,13 @@ use crate::factory::{
 use crate::scope::ScopePtr;
 use crate::{AnyFactoryRef, BindAnnotation, ChassisResult, Injector, Key, Module};
 
+#[cfg(nightly_unsize)]
+use std::marker::Unsize;
+
+#[cfg(nightly_unsize)]
+use crate::factory::ConverterBuilder;
+use std::any::type_name;
+
 pub struct Binder {
     recorded: Vec<RecordedBinding>,
 }
@@ -145,6 +152,22 @@ impl<'a, T: ?Sized + 'static> BindingBuilder<'a, T> {
         self.binder.recorded[self.pos].scope = Some(scope);
         self
     }
+
+    /// create linked binding to a other type.
+    ///
+    /// The other type have to be binded.
+    #[cfg(nightly_unsize)]
+    pub fn to_type<U: Unsize<T> + ?Sized + 'static>(&mut self) -> &mut Self {
+        self.set_factory(
+            to_any_factory(ConverterBuilder::<T, U>::new().build(|x| x)),
+            BindingType::Linked,
+        );
+        self.set_injection_point(InjectionPoint::for_module_function(
+            "BindingBuilder::to_type",
+            &[Key::new::<U>()],
+        ));
+        self
+    }
 }
 
 impl From<RecordedBinding> for Binding {
@@ -161,5 +184,36 @@ impl From<RecordedBinding> for Binding {
             recorded.binding_type.unwrap(),
             recorded.key,
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct Class;
+
+    trait Trait1 {}
+    impl Trait1 for Class {}
+
+    #[cfg(nightly_unsize)]
+    #[test]
+    fn test_bind_to_type() {
+        let mut binder = Binder::new();
+        binder.bind::<Class>().to_instance(Class);
+        binder.bind::<dyn Trait1>().to_type::<Class>();
+
+        assert_eq!(2, binder.recorded.len());
+        assert_eq!(Key::new::<dyn Trait1>(), binder.recorded[1].key);
+        assert_eq!(Some(BindingType::Linked), binder.recorded[1].binding_type);
+        assert!(binder.recorded[1].injection_point.is_some());
+
+        let injection_point = binder.recorded[1].injection_point.as_ref().unwrap();
+        assert_eq!("BindingBuilder::to_type", injection_point.member());
+        assert_eq!(1, injection_point.dependencies().len());
+        assert_eq!(
+            &Key::new::<Class>(),
+            injection_point.dependencies()[0].key()
+        );
     }
 }
