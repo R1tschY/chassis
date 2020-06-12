@@ -3,6 +3,14 @@ name = "chassis"
 version = "0.1.0"
 authors = ["Richard Liebscher <r1tschy@posteo.de>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Dependency injection framework inspiried by Guice"
+repository = "https://github.com/R1tschY/chassis"
+readme = "../README.md"
+keywords = ["dependency-injection"]
+
+[badges]
+maintenance = { status = "experimental" }
 
 [dependencies]
 chassis-proc-macros = { path = "../proc_macros" }

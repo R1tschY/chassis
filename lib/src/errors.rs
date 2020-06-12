@@ -1,4 +1,5 @@
 use crate::Key;
+use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
@@ -27,10 +28,19 @@ impl Errors {
     }
 }
 
+impl fmt::Display for Errors {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO: do better
+        f.debug_list().entries(&self.errors).finish()
+    }
+}
+
 impl fmt::Debug for Errors {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(&self.errors).finish()
     }
 }
+
+impl Error for Errors {}
 
 pub type ChassisResult<T> = Result<T, Errors>;
