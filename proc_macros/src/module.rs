@@ -1,19 +1,15 @@
 use proc_macro::TokenStream;
+use std::ops::Deref;
+
+use syn::export::TokenStream2;
+use syn::spanned::Spanned;
+use syn::{FnArg, Signature, Type};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCreator};
 use crate::inject::{codegen_injectfns, INJECT_META_PREFIX};
 use crate::signature::{process_sig, InjectFn};
 use crate::syn_ext::IdentExt;
-use std::ops::Deref;
-use syn::export::{ToTokens, TokenStream2};
-use syn::spanned::Spanned;
-use syn::{FnArg, Signature, Type};
-
-fn to_tokens(x: impl ToTokens) -> TokenStream2 {
-    let mut tokens = TokenStream2::new();
-    x.to_tokens(&mut tokens);
-    tokens
-}
+use crate::utils::to_tokens;
 
 fn error_configure_signature(sig: &Signature) -> Diagnostic {
     sig.span().error(format!(
@@ -80,12 +76,12 @@ pub fn module(input: TokenStream) -> TokenStream {
     let mut configure: Option<Signature> = None;
     let name: &syn::Type = &impl_block.self_ty;
     let mut functions: Vec<InjectFn> = vec![];
-    for item in &mut impl_block.items {
-        if let syn::ImplItem::Method(method) = item {
+    for mut item in &mut impl_block.items {
+        if let syn::ImplItem::Method(ref mut method) = &mut item {
             if &method.sig.ident.to_string() == "configure" {
                 configure = Some(method.sig.clone());
             } else if let syn::Visibility::Public(_) = method.vis {
-                functions.push(process_sig(&mut method.sig));
+                functions.push(process_sig(method));
             }
         }
     }

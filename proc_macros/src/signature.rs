@@ -1,8 +1,10 @@
 use syn::{Attribute, GenericArgument, Ident, PathArguments, PathSegment, Type};
 
+use crate::attributes::{is_chassis_attr, parse_attr, InjectAttr};
+
 pub struct InjectFnArg {
     pub name: Option<Ident>,
-    pub attr: Option<Attribute>,
+    pub attrs: Vec<InjectAttr>,
     pub ty: InjectType,
 }
 
@@ -10,6 +12,7 @@ pub struct InjectFn {
     pub name: Ident,
     pub inputs: Vec<InjectFnArg>,
     pub output: InjectType,
+    pub attrs: Vec<InjectAttr>,
 }
 
 pub struct InjectType {
@@ -23,11 +26,6 @@ pub enum WrapperType {
     Box,
 }
 
-fn is_chassis_attr(attr: &Attribute) -> bool {
-    let segs = &attr.path.segments;
-    segs.len() == 1 && &segs[0].ident.to_string() == "chassis"
-}
-
 fn drain_where<T: Clone, F: Fn(&T) -> bool>(v: &mut Vec<T>, f: F) -> Vec<T> {
     // TODO: use Vec::drain_filter when stabilised
     let res: Vec<T> = v.iter().filter(|x| f(x)).cloned().collect();
@@ -36,8 +34,9 @@ fn drain_where<T: Clone, F: Fn(&T) -> bool>(v: &mut Vec<T>, f: F) -> Vec<T> {
 }
 
 /// Parse function signature and removes chassis annotations.
-pub fn process_sig(sig: &mut syn::Signature) -> InjectFn {
-    let inputs: Vec<_> = sig
+pub fn process_sig(function: &mut syn::ImplItemMethod) -> InjectFn {
+    let inputs: Vec<_> = function
+        .sig
         .inputs
         .iter_mut()
         .map(|input| {
@@ -53,28 +52,28 @@ pub fn process_sig(sig: &mut syn::Signature) -> InjectFn {
             };
 
             let chassis_attrs: Vec<Attribute> = drain_where(attrs, is_chassis_attr);
-            if chassis_attrs.len() > 1 {
-                panic!("Only one chassis dependency annotation is allowed");
-            }
-
+            // TODO: check for only one annotation
             InjectFnArg {
                 name: ident,
-                attr: chassis_attrs.into_iter().next(),
+                attrs: chassis_attrs.into_iter().map(parse_attr).collect(),
                 ty: parse_inject_type(ty),
             }
         })
         .collect();
 
-    let rty: InjectType = match &sig.output {
+    let chassis_attrs: Vec<Attribute> = drain_where(&mut function.attrs, is_chassis_attr);
+
+    let rty: InjectType = match &function.sig.output {
         syn::ReturnType::Default => panic!("return type required"),
         // TODO: check for type: no lifetime, ...
         syn::ReturnType::Type(_, ty) => parse_inject_type(ty),
     };
 
     InjectFn {
-        name: sig.ident.clone(),
+        name: function.sig.ident.clone(),
         inputs,
         output: rty,
+        attrs: chassis_attrs.into_iter().map(parse_attr).collect(),
     }
 }
 

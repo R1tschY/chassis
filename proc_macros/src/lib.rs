@@ -9,12 +9,13 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 
-mod syn_ext;
-
+mod attributes;
 mod diagnostic;
 mod inject;
 mod module;
 mod signature;
+mod syn_ext;
+mod utils;
 
 #[proc_macro]
 pub fn factory(input: TokenStream) -> TokenStream {

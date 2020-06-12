@@ -1,10 +1,13 @@
 use proc_macro::TokenStream;
 
-use crate::signature::{process_sig, InjectFn, WrapperType};
-use crate::syn_ext::IdentExt;
 use proc_macro2::{Ident, Span};
 use syn::parse::{Parse, ParseStream};
 use syn::Expr;
+
+use crate::attributes::get_annotation_attribute;
+use crate::signature::{process_sig, InjectFn, WrapperType};
+use crate::syn_ext::IdentExt;
+use syn::export::TokenStream2;
 
 pub const INJECT_META_PREFIX: &str = "__injectbind_";
 pub const INJECT_PREFIX: &str = "__inject_";
@@ -34,7 +37,7 @@ pub fn factory(input: TokenStream) -> TokenStream {
 
 pub fn inject(input: TokenStream) -> TokenStream {
     let mut function: syn::ImplItemMethod = parse_macro_input!(input as syn::ImplItemMethod);
-    let sig: InjectFn = process_sig(&mut function.sig);
+    let sig: InjectFn = process_sig(&mut function);
     codegen_classfn(Span::call_site(), &function, sig)
 }
 
@@ -62,7 +65,7 @@ pub fn codegen_injectfns(
     let mut dep_keys: Vec<proc_macro2::TokenStream> = vec![];
     for input in &sig.inputs {
         let ty = &input.ty.outer_ty;
-        let tokens = if let Some(annotation) = &input.attr {
+        let tokens = if let Some(annotation) = get_annotation_attribute(&input.attrs) {
             let KeyAttributeMeta(expr) = syn::parse2(annotation.tokens.clone()).unwrap();
             quote! {
                 chassis::TypedKey::< <#ty as chassis::ResolveInto>::Item >
@@ -90,14 +93,20 @@ pub fn codegen_injectfns(
         let rty = &sig.output.inner_ty;
         quote! { #rty }
     };
+    let annotation = if let Some(annotation) = get_annotation_attribute(&sig.attrs) {
+        let KeyAttributeMeta(expr) = syn::parse2(annotation.tokens.clone()).unwrap();
+        quote! { binding.annotated_with(#expr); }
+    } else {
+        TokenStream2::new()
+    };
 
     let code_metafn = quote_spanned! {span=>
         pub fn #metafn_name(__binder__: &mut chassis::Binder) {
             #[allow(unused_imports)] use chassis::Named;
 
-            __binder__
-                .bind::<#rty_token>()
-                .#factory_ident(
+            let mut binding = __binder__.bind::<#rty_token>();
+            #annotation
+            binding.#factory_ident(
                     Self::#injectfn_name,
                     chassis::meta::InjectionPoint::for_module_function(
                         #userfn_name_str,

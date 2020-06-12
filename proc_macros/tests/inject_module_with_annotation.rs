@@ -16,15 +16,19 @@ struct Module;
 #[rustfmt::skip]
 #[module]
 impl Module {
+    #[annotation(Named("parameter1"))]
+    pub fn a1() -> String {
+        "one".into()
+    }
+
     pub fn class1(
-        #[chassis(Named("parameter1"))] a1: Arc<String>,
-        #[chassis(Transactional)] a2: Arc<String>
+        #[annotation(Named("parameter1"))] a1: Arc<String>,
+        #[annotation(Transactional)] a2: Arc<String>
     ) -> Class1 {
         Class1(a1.to_string(), a2.to_string())
     }
 
     fn configure(binder: &mut Binder) {
-        binder.bind::<String>().annotated_with(Named("parameter1")).to_instance("one".into());
         binder.bind::<String>().annotated_with(Transactional).to_instance("two".into());
     }
 }

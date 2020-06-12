@@ -31,20 +31,20 @@ struct DemoModule;
 
 #[module]
 impl DemoModule {
-    #[chassis(annotation = Count)]
+    #[annotation(Count)]
     pub fn provide_count() -> i32 {
-        3
+        5
     }
 
-    #[chassis(annotation = Message)]
+    #[annotation(Message)]
     pub fn provide_message() -> String {
         "Hello World".to_string()
     }
 
     #[rustfmt::skip]
     pub fn provide_greeter(
-        #[chassis(Message)] message: Arc<String>,
-        #[chassis(Count)] count: Arc<i32>
+        #[annotation(Message)] message: Arc<String>,
+        #[annotation(Count)] count: Arc<i32>
     ) -> Greeter {
         Greeter::new(message.to_string(), *count)
     }
