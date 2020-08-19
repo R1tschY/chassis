@@ -1,7 +1,7 @@
 #![cfg_attr(nightly_unsize, feature(coerce_unsized, unsize))]
 
 #[doc(hidden)]
-pub use chassis_proc_macros::{factory, inject, module};
+pub use chassis_proc_macros::{factory, inject, integration, module};
 
 pub use crate::bind::annotation::{BindAnnotation, Named};
 pub use crate::bind::binder::Binder;

@@ -129,7 +129,7 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
     }
 }
 
-pub(crate) trait DiagnosticCreator {
+pub(crate) trait DiagnosticExt {
     /// Create a compiler error and return the code to be placed into code.
     fn error<T: Into<String>>(&self, message: T) -> Diagnostic;
 
@@ -143,7 +143,7 @@ pub(crate) trait DiagnosticCreator {
     fn help<T: Into<String>>(&self, message: T) -> Diagnostic;
 }
 
-impl DiagnosticCreator for proc_macro2::Span {
+impl DiagnosticExt for proc_macro2::Span {
     fn error<T: Into<String>>(&self, message: T) -> Diagnostic {
         Diagnostic::new(DiagnosticLevel::Error, message, *self)
     }

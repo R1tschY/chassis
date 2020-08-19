@@ -26,18 +26,18 @@ pub fn parse_attr(attr: Attribute) -> InjectAttr {
         } else {
             panic!(
                 "Unsupported part arguments in chassis attribute: {}",
-                to_tokens(attr)
+                to_tokens(&attr)
             );
         }
     }
 
     if parts.len() != 1 {
-        panic!("Unknown chassis attribute: {}", to_tokens(attr));
+        panic!("Unknown chassis attribute: {}", to_tokens(&attr));
     }
 
     let ty = match &parts[0].ident.to_string() as &str {
         "annotation" => InjectAttrType::Annotation,
-        _ => panic!("Unknown chassis attribute: {}", to_tokens(attr)),
+        _ => panic!("Unknown chassis attribute: {}", to_tokens(&attr)),
     };
 
     InjectAttr {

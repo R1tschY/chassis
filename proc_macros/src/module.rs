@@ -5,7 +5,7 @@ use syn::export::TokenStream2;
 use syn::spanned::Spanned;
 use syn::{FnArg, Signature, Type};
 
-use crate::diagnostic::{Diagnostic, DiagnosticCreator};
+use crate::diagnostic::{Diagnostic, DiagnosticExt};
 use crate::inject::{codegen_injectfns, INJECT_META_PREFIX};
 use crate::signature::{process_sig, InjectFn};
 use crate::syn_ext::IdentExt;

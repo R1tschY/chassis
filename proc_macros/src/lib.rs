@@ -10,6 +10,7 @@ extern crate syn;
 use proc_macro::TokenStream;
 
 mod attributes;
+mod compiled;
 mod diagnostic;
 mod inject;
 mod module;
@@ -30,4 +31,9 @@ pub fn inject(_args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn module(_args: TokenStream, input: TokenStream) -> TokenStream {
     crate::module::module(input)
+}
+
+#[proc_macro_attribute]
+pub fn integration(args: TokenStream, input: TokenStream) -> TokenStream {
+    crate::compiled::integration(args, input)
 }
