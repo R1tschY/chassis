@@ -1,0 +1,23 @@
+[package]
+name = "dyn-chassis"
+version = "0.1.0"
+authors = ["Richard Liebscher <r1tschy@posteo.de>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Runtime Dependency Injection framework inspiried by Guice"
+repository = "https://github.com/R1tschY/chassis"
+readme = "../README.md"
+keywords = ["dependency-injection"]
+
+[badges]
+maintenance = { status = "experimental" }
+
+[dependencies]
+dyn-chassis-proc-macros = { path = "../dyn-proc-macros" }
+lazy_static = "1.4.0"
+
+[dev-dependencies]
+assert_matches = "1.3"
+
+[build-dependencies]
+version_check = "0.9"
