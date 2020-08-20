@@ -1,0 +1,36 @@
+error[E0053]: method `resolve_dummy` has an incompatible type for trait
+  --> $DIR/comp_no_self_ref.rs:18:12
+   |
+18 |         fn resolve_dummy(&mut self) -> Dummy;
+   |            ^^^^^^^^^^^^^ --------- type in trait
+   |            |
+   |            types differ in mutability
+   |
+   = note: expected fn pointer `fn(&mut mut_self::DummyFactoryImpl) -> Dummy`
+              found fn pointer `fn(&mut_self::DummyFactoryImpl) -> Dummy`
+help: consider change the type to match the mutability in trait
+   |
+18 |         fn &mut self(&mut self) -> Dummy;
+   |            ^^^^^^^^^
+
+error[E0053]: method `resolve_dummy` has an incompatible type for trait
+  --> $DIR/comp_no_self_ref.rs:35:12
+   |
+35 |         fn resolve_dummy(self) -> Dummy;
+   |            ^^^^^^^^^^^^^ ---- type in trait
+   |            |
+   |            expected struct `move_self::DummyFactoryImpl`, found `&move_self::DummyFactoryImpl`
+   |
+   = note: expected fn pointer `fn(move_self::DummyFactoryImpl) -> Dummy`
+              found fn pointer `fn(&move_self::DummyFactoryImpl) -> Dummy`
+
+error[E0053]: method `resolve_dummy` has an incompatible type for trait
+  --> $DIR/comp_no_self_ref.rs:52:12
+   |
+52 |         fn resolve_dummy(self: &Box<Self>) -> Dummy;
+   |            ^^^^^^^^^^^^^       ---------- type in trait
+   |            |
+   |            expected struct `std::boxed::Box`, found struct `box_self::DummyFactoryImpl`
+   |
+   = note: expected fn pointer `fn(&std::boxed::Box<box_self::DummyFactoryImpl>) -> Dummy`
+              found fn pointer `fn(&box_self::DummyFactoryImpl) -> Dummy`

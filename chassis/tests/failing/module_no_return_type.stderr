@@ -1,0 +1,7 @@
+error: custom attribute panicked
+ --> $DIR/module_no_return_type.rs:5:1
+  |
+5 | #[integration]
+  | ^^^^^^^^^^^^^^
+  |
+  = help: message: return type required

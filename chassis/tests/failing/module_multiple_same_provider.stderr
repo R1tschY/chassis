@@ -1,0 +1,7 @@
+error: custom attribute panicked
+ --> $DIR/module_multiple_same_provider.rs:5:1
+  |
+5 | #[integration]
+  | ^^^^^^^^^^^^^^
+  |
+  = help: message: explicit panic

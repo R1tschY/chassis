@@ -1,0 +1,7 @@
+error: custom attribute panicked
+  --> $DIR/missing_dep.rs:11:1
+   |
+11 | #[integration]
+   | ^^^^^^^^^^^^^^
+   |
+   = help: message: Missing binding for `IntArg` to resolve `TODO`

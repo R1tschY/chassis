@@ -19,7 +19,7 @@ impl IocContainer {
 
     pub fn add(&mut self, key: StaticKey, implementation: Implementation) {
         let old = self.bindings.insert(key, implementation);
-        if let Some(old) = old {
+        if let Some(_) = old {
             panic!("Already implementation existing");
         }
     }

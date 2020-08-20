@@ -1,6 +1,4 @@
-use crate::arguments::ComponentAttrArgs;
 use crate::container::IocContainer;
-use crate::diagnostic::DiagnosticExt;
 use crate::signature::process_sig;
 use crate::syn_ext::IdentExt;
 use crate::utils::to_tokens;
@@ -156,7 +154,7 @@ pub fn eq_attr_name(attr: &syn::Attribute, seg0: &str) -> bool {
 /// Main macro for compile time dependency injection.
 ///
 /// Creates implementation for component trait.
-pub fn integration(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn integration(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut mod_block: syn::ItemMod = parse_macro_input!(input);
 
     let mut mod_impl = match &mut mod_block.content {
@@ -207,8 +205,8 @@ fn parse_block(mod_impl: &mut Vec<Item>) -> Block {
                 });
                 if attrs.len() > 1 {
                     panic!("More than one static_module attribute found");
-                } else if attrs.len() == 1 {
-                    modules.push(parse_module(attrs.into_iter().next().unwrap(), impl_block));
+                } else {
+                    modules.push(parse_module(attrs.into_iter().next(), impl_block));
                 }
             }
 
@@ -220,11 +218,8 @@ fn parse_block(mod_impl: &mut Vec<Item>) -> Block {
                 });
                 if attrs.len() > 1 {
                     panic!("More than one static_component attribute found");
-                } else if attrs.len() == 1 {
-                    components.push(parse_component(
-                        attrs.into_iter().next().unwrap(),
-                        trait_block,
-                    ));
+                } else {
+                    components.push(parse_component(attrs.into_iter().next(), trait_block));
                 }
             }
 
@@ -283,10 +278,7 @@ fn codegen_key_impl(key: &StaticKey, container: &IocContainer) -> TokenStream2 {
     let binding = if let Some(binding) = container.resolve(key) {
         binding
     } else {
-        panic!(
-            "Missing binding for `{}` to resolve `TODO`: {:?}",
-            key, container
-        );
+        panic!("Missing binding for `{}` to resolve `TODO`", key);
     };
 
     codegen_impl(binding, container)
@@ -295,7 +287,7 @@ fn codegen_key_impl(key: &StaticKey, container: &IocContainer) -> TokenStream2 {
 fn codegen_impl(implementation: &Implementation, container: &IocContainer) -> TokenStream2 {
     match implementation {
         Implementation::Factory {
-            rty,
+            rty: _,
             module,
             func,
             injection_point,
@@ -325,7 +317,7 @@ fn parse_signature(sig: &syn::Signature) -> ChassisResult<Request> {
     })
 }
 
-pub fn parse_component(attr: syn::Attribute, trait_block: &ItemTrait) -> ComponentTrait {
+pub fn parse_component(_attr: Option<syn::Attribute>, trait_block: &ItemTrait) -> ComponentTrait {
     // TODO: parse attr for module names
 
     // TODO: check for generics / lifetimes / unsafe / auto / supertraits
@@ -355,7 +347,7 @@ pub fn parse_component(attr: syn::Attribute, trait_block: &ItemTrait) -> Compone
     }
 }
 
-pub fn parse_module(attr: syn::Attribute, impl_block: &mut ItemImpl) -> Module {
+pub fn parse_module(_attr: Option<syn::Attribute>, impl_block: &mut ItemImpl) -> Module {
     // TODO: parse attr
     // TODO: check for generics / lifetimes / unsafe / auto / supertraits
 

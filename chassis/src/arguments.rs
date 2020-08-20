@@ -1,8 +1,5 @@
-use proc_macro2::TokenStream;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::token::Token;
-use syn::Expr;
 
 /// attribute argument like `modules = [mymod::MyModule]`
 pub struct ComponentAttrArg {
