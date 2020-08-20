@@ -1,7 +1,0 @@
-error: custom attribute panicked
- --> $DIR/comp_no_type_item.rs:5:1
-  |
-5 | #[integration]
-  | ^^^^^^^^^^^^^^
-  |
-  = help: message: explicit panic

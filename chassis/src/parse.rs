@@ -4,8 +4,10 @@ use crate::syn_ext::IdentExt;
 use crate::utils::to_tokens;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
+use std::cell::RefCell;
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::ops::Deref;
 use syn::export::TokenStream2;
 use syn::{ImplItem, Item, ItemImpl, ItemTrait, ReturnType, TraitItem, Type};
 
@@ -263,7 +265,9 @@ fn codegen_component_impl(component: ComponentTrait, container: &IocContainer) -
 }
 
 fn codegen_request_impl(request: Request, container: &IocContainer) -> TokenStream2 {
-    let impl_code = codegen_key_impl(&request.key, container);
+    let provider_ctx = ProviderContext::new(container);
+
+    let impl_code = codegen_key_impl(&request.key, &provider_ctx);
     let rty = &request.key.ty;
     let name = &request.name;
     let span = request.name.span(); // TODO: use Signature as span
@@ -274,17 +278,79 @@ fn codegen_request_impl(request: Request, container: &IocContainer) -> TokenStre
     }
 }
 
-fn codegen_key_impl(key: &StaticKey, container: &IocContainer) -> TokenStream2 {
-    let binding = if let Some(binding) = container.resolve(key) {
+/// helper to detect cyclic dependencies
+struct ProviderContext<'a> {
+    container: &'a IocContainer,
+    resolving: RefCell<Vec<StaticKey>>,
+}
+
+struct ProviderContextScope<'a, 'b> {
+    context: &'a ProviderContext<'b>,
+    result: Option<&'b Implementation>,
+}
+
+impl<'a> ProviderContext<'a> {
+    pub fn new(container: &'a IocContainer) -> Self {
+        Self {
+            container,
+            resolving: RefCell::new(vec![]),
+        }
+    }
+
+    pub fn enter_resolving(&self, key: &StaticKey) -> ProviderContextScope<'_, 'a> {
+        {
+            let mut resolving = self.resolving.borrow_mut();
+            if resolving.contains(key) {
+                resolving.push(key.clone());
+                let req_chain = resolving
+                    .iter()
+                    .map(|k| k.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" -> ");
+                panic!("Cyclic dependency found: {}", req_chain);
+            }
+            resolving.push(key.clone());
+        }
+
+        let result = self.container.resolve(key);
+        ProviderContextScope {
+            context: self,
+            result,
+        }
+    }
+
+    fn leave_resolving(&self) {
+        self.resolving.borrow_mut().pop();
+    }
+}
+
+impl<'a, 'b> Drop for ProviderContextScope<'a, 'b> {
+    fn drop(&mut self) {
+        self.context.leave_resolving();
+    }
+}
+
+impl<'a, 'b> Deref for ProviderContextScope<'a, 'b> {
+    type Target = Option<&'b Implementation>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.result
+    }
+}
+
+fn codegen_key_impl(key: &StaticKey, provider_ctx: &ProviderContext) -> TokenStream2 {
+    let scope = provider_ctx.enter_resolving(key);
+
+    let binding = if let Some(binding) = scope.deref() {
         binding
     } else {
         panic!("Missing binding for `{}` to resolve `TODO`", key);
     };
 
-    codegen_impl(binding, container)
+    codegen_impl(binding, provider_ctx)
 }
 
-fn codegen_impl(implementation: &Implementation, container: &IocContainer) -> TokenStream2 {
+fn codegen_impl(implementation: &Implementation, provider_ctx: &ProviderContext) -> TokenStream2 {
     match implementation {
         Implementation::Factory {
             rty: _,
@@ -295,14 +361,14 @@ fn codegen_impl(implementation: &Implementation, container: &IocContainer) -> To
             let dep_impls: Vec<TokenStream2> = injection_point
                 .deps
                 .iter()
-                .map(|dep| codegen_key_impl(&dep.key, container))
+                .map(|dep| codegen_key_impl(&dep.key, provider_ctx))
                 .collect();
 
             quote! {
                 #module::#func(#(#dep_impls),*)
             }
         }
-        Implementation::Linked(key) => codegen_key_impl(key, container),
+        Implementation::Linked(key) => codegen_key_impl(key, provider_ctx),
     }
 }
 
@@ -326,17 +392,19 @@ pub fn parse_component(_attr: Option<syn::Attribute>, trait_block: &ItemTrait) -
         match item {
             TraitItem::Method(method) => {
                 if method.default.is_some() {
-                    panic!()
-                    // TODO: return Err(ChassisError::DefaultImplementationInComponent);
+                    panic!(
+                        "Default implementation of {} in component {} not allowed",
+                        method.sig.ident, trait_block.ident
+                    )
                 }
 
                 // TODO: Check for &self
                 requests.push(parse_signature(&method.sig).unwrap()) // TODO: no unwrap()
             }
-            TraitItem::Type(_) => {
-                panic!()
-                // TODO: return Err(ChassisError::TypeItemInComponent);
-            }
+            TraitItem::Type(_) => panic!(
+                "Associated type not allowed in component {}",
+                trait_block.ident
+            ),
             _ => (),
         }
     }

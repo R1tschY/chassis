@@ -1,0 +1,7 @@
+error: custom attribute panicked
+ --> $DIR/comp_default_impl.rs:5:1
+  |
+5 | #[integration]
+  | ^^^^^^^^^^^^^^
+  |
+  = help: message: Default implementation of resolve_dummy in component DummyFactory not allowed

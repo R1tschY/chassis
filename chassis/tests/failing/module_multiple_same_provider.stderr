@@ -4,4 +4,4 @@ error: custom attribute panicked
 5 | #[integration]
   | ^^^^^^^^^^^^^^
   |
-  = help: message: explicit panic
+  = help: message: Already implementation existing

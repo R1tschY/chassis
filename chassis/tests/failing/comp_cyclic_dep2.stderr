@@ -1,0 +1,7 @@
+error: custom attribute panicked
+ --> $DIR/comp_cyclic_dep2.rs:6:1
+  |
+6 | #[integration]
+  | ^^^^^^^^^^^^^^
+  |
+  = help: message: Cyclic dependency found: Dummy1 -> Dummy2 -> Dummy1

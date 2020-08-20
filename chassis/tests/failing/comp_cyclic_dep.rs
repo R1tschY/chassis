@@ -15,9 +15,7 @@ mod mut_self {
     }
 
     pub trait DummyFactory {
-        fn resolve_dummy(&self) -> Dummy {
-            Dummy
-        }
+        fn resolve_dummy(&self) -> Dummy;
     }
 }
 
