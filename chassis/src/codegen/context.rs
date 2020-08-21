@@ -1,7 +1,8 @@
-use crate::container::IocContainer;
-use crate::parse::{Implementation, StaticKey};
 use std::cell::RefCell;
 use std::ops::Deref;
+
+use crate::container::IocContainer;
+use crate::model::{Implementation, StaticKey};
 
 /// Context for generation of one provider.
 ///

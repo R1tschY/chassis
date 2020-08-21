@@ -1,6 +1,7 @@
-use crate::parse::{Implementation, Module, StaticKey};
 use std::collections::HashMap;
 use std::fmt;
+
+use crate::model::{Implementation, Module, StaticKey};
 
 pub struct IocContainer {
     bindings: HashMap<StaticKey, Implementation>,

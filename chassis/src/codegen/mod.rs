@@ -1,9 +1,11 @@
+use std::ops::Deref;
+
+use proc_macro2::TokenStream;
+
 use crate::codegen::context::CodegenContext;
 use crate::container::IocContainer;
-use crate::parse::{ComponentTrait, Implementation, Request, StaticKey};
+use crate::model::{ComponentTrait, Implementation, Request, StaticKey};
 use crate::syn_ext::IdentExt;
-use proc_macro2::TokenStream;
-use std::ops::Deref;
 
 mod context;
 
