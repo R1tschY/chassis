@@ -90,15 +90,11 @@ pub enum BindingType {
 }
 
 /// Implementation for binding
-pub enum Implementation {
-    Factory {
-        rty: syn::Type,
-        module: Box<syn::Type>,
-        func: Ident,
-        injection_point: InjectionPoint,
-    },
-    //Instance,
-    Linked(StaticKey),
+pub struct Implementation {
+    pub rty: syn::Type,
+    pub module: Box<syn::Type>,
+    pub func: Ident,
+    pub injection_point: InjectionPoint,
 }
 
 /// Bind a implementation to a key

@@ -1,7 +1,16 @@
-error: custom attribute panicked
- --> $DIR/comp_cyclic_dep2.rs:6:1
-  |
-6 | #[integration]
-  | ^^^^^^^^^^^^^^
-  |
-  = help: message: Cyclic dependency found: Dummy1 -> Dummy2 -> Dummy1
+error: Cyclic dependency for `Dummy1`
+  --> $DIR/comp_cyclic_dep2.rs:13:38
+   |
+13 |         pub fn provide_dummy2(dummy: Dummy1) -> Dummy2 {
+   |                                      ^^^^^^
+   |
+help: required for `Dummy2`
+  --> $DIR/comp_cyclic_dep2.rs:17:38
+   |
+17 |         pub fn provide_dummy1(dummy: Dummy2) -> Dummy1 {
+   |                                      ^^^^^^
+help: required for `Dummy1`
+  --> $DIR/comp_cyclic_dep2.rs:23:36
+   |
+23 |         fn resolve_dummy(&self) -> Dummy1;
+   |                                    ^^^^^^

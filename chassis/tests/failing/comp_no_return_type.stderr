@@ -1,7 +1,5 @@
-error: custom attribute panicked
- --> $DIR/comp_no_return_type.rs:5:1
-  |
-5 | #[integration]
-  | ^^^^^^^^^^^^^^
-  |
-  = help: message: called `Result::unwrap()` on an `Err` value: MissingReturnTypeInComponent
+error: Return type is required
+  --> $DIR/comp_no_return_type.rs:18:9
+   |
+18 |         fn resolve_dummy(&self);
+   |         ^^^^^^^^^^^^^^^^^^^^^^^

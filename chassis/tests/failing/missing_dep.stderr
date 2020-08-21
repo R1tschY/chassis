@@ -1,7 +1,11 @@
-error: custom attribute panicked
-  --> $DIR/missing_dep.rs:11:1
+error: Missing dependency `IntArg`
+  --> $DIR/missing_dep.rs:22:54
    |
-11 | #[integration]
-   | ^^^^^^^^^^^^^^
+22 |         pub fn provide_dummy(string: StringArg, int: IntArg) -> Dummy {
+   |                                                      ^^^^^^
    |
-   = help: message: Missing binding for `IntArg` to resolve `TODO`
+help: required for `Dummy`
+  --> $DIR/missing_dep.rs:28:36
+   |
+28 |         fn resolve_dummy(&self) -> Dummy;
+   |                                    ^^^^^

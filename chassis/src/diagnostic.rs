@@ -50,7 +50,7 @@ impl Diagnostic {
     diagnostic_hint_fns!(help, help_in, DiagnosticLevel::Help);
 
     #[cfg(not(nightly_diagnostics))]
-    pub fn emit(self) -> proc_macro2::TokenStream {
+    pub fn emit(self) -> TokenStream2 {
         use std::convert::TryInto;
 
         let err: Result<syn::parse::Error, ()> = self.try_into();
@@ -62,7 +62,7 @@ impl Diagnostic {
     }
 
     #[cfg(nightly_diagnostics)]
-    pub fn emit(self) -> proc_macro2::TokenStream {
+    pub fn emit(self) -> TokenStream2 {
         let diag: proc_macro::Diagnostic = self.into();
         diag.emit();
         TokenStream2::new()

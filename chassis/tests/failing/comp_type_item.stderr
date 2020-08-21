@@ -1,7 +1,5 @@
-error: custom attribute panicked
- --> $DIR/comp_type_item.rs:5:1
-  |
-5 | #[integration]
-  | ^^^^^^^^^^^^^^
-  |
-  = help: message: Associated type not allowed in component DummyFactory
+error: Associated type not allowed in component
+  --> $DIR/comp_type_item.rs:18:9
+   |
+18 |         type Item;
+   |         ^^^^^^^^^^

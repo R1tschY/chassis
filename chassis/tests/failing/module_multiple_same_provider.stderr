@@ -1,7 +1,5 @@
-error: custom attribute panicked
- --> $DIR/module_multiple_same_provider.rs:5:1
-  |
-5 | #[integration]
-  | ^^^^^^^^^^^^^^
-  |
-  = help: message: Already implementation existing
+error: Duplicate implementation for Dummy
+  --> $DIR/module_multiple_same_provider.rs:15:36
+   |
+15 |         pub fn provide_dummy2() -> Dummy {
+   |                                    ^^^^^
