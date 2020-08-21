@@ -1,5 +1,5 @@
 # Chassis
 
-*Dependency injection framework for Rust inspiried by Guice*
+*Compile-time dependency injector for Rust inspiried by Dagger 2*
 
 

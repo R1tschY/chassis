@@ -1,15 +1,19 @@
-use crate::container::IocContainer;
-use crate::signature::process_sig;
-use crate::syn_ext::IdentExt;
-use crate::utils::to_tokens;
 use proc_macro::TokenStream;
-use proc_macro2::Ident;
-use std::cell::RefCell;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::ops::Deref;
+
+use proc_macro2::Ident;
 use syn::export::TokenStream2;
 use syn::{ImplItem, Item, ItemImpl, ItemTrait, ReturnType, TraitItem, Type};
+
+use crate::codegen::codegen_component_impl;
+use crate::container::IocContainer;
+use crate::parse::signature::process_sig;
+use crate::utils::to_tokens;
+
+mod arguments;
+mod attributes;
+mod signature;
 
 #[derive(Debug)]
 enum ChassisError {
@@ -37,6 +41,14 @@ impl StaticKey {
             ty_str: to_tokens(&ty).to_string(),
             ty,
         }
+    }
+
+    pub fn type_(&self) -> &syn::Type {
+        &self.ty
+    }
+
+    pub fn type_string(&self) -> &str {
+        &self.ty_str
     }
 }
 
@@ -232,143 +244,6 @@ fn parse_block(mod_impl: &mut Vec<Item>) -> Block {
     Block {
         modules,
         components,
-    }
-}
-
-fn codegen_component_impl(component: ComponentTrait, container: &IocContainer) -> TokenStream2 {
-    let trait_name = component.trait_name;
-    let impl_name = trait_name.append("Impl");
-    let impl_items: Vec<_> = component
-        .requests
-        .into_iter()
-        .map(|request| codegen_request_impl(request, container))
-        .collect();
-
-    let tokens = quote! {
-        pub struct #impl_name;  // TODO: use visibility of trait
-
-        impl #impl_name {
-            pub fn new() -> Self { Self }
-        }
-
-        impl #trait_name for #impl_name {
-            #(#impl_items)*
-        }
-
-        impl Default for #impl_name {
-            fn default() -> Self {
-                Self::new()
-            }
-        }
-    };
-    tokens
-}
-
-fn codegen_request_impl(request: Request, container: &IocContainer) -> TokenStream2 {
-    let provider_ctx = ProviderContext::new(container);
-
-    let impl_code = codegen_key_impl(&request.key, &provider_ctx);
-    let rty = &request.key.ty;
-    let name = &request.name;
-    let span = request.name.span(); // TODO: use Signature as span
-    quote_spanned! {span=>
-        fn #name(&self) -> #rty {
-            #impl_code
-        }
-    }
-}
-
-/// helper to detect cyclic dependencies
-struct ProviderContext<'a> {
-    container: &'a IocContainer,
-    resolving: RefCell<Vec<StaticKey>>,
-}
-
-struct ProviderContextScope<'a, 'b> {
-    context: &'a ProviderContext<'b>,
-    result: Option<&'b Implementation>,
-}
-
-impl<'a> ProviderContext<'a> {
-    pub fn new(container: &'a IocContainer) -> Self {
-        Self {
-            container,
-            resolving: RefCell::new(vec![]),
-        }
-    }
-
-    pub fn enter_resolving(&self, key: &StaticKey) -> ProviderContextScope<'_, 'a> {
-        {
-            let mut resolving = self.resolving.borrow_mut();
-            if resolving.contains(key) {
-                resolving.push(key.clone());
-                let req_chain = resolving
-                    .iter()
-                    .map(|k| k.to_string())
-                    .collect::<Vec<String>>()
-                    .join(" -> ");
-                panic!("Cyclic dependency found: {}", req_chain);
-            }
-            resolving.push(key.clone());
-        }
-
-        let result = self.container.resolve(key);
-        ProviderContextScope {
-            context: self,
-            result,
-        }
-    }
-
-    fn leave_resolving(&self) {
-        self.resolving.borrow_mut().pop();
-    }
-}
-
-impl<'a, 'b> Drop for ProviderContextScope<'a, 'b> {
-    fn drop(&mut self) {
-        self.context.leave_resolving();
-    }
-}
-
-impl<'a, 'b> Deref for ProviderContextScope<'a, 'b> {
-    type Target = Option<&'b Implementation>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.result
-    }
-}
-
-fn codegen_key_impl(key: &StaticKey, provider_ctx: &ProviderContext) -> TokenStream2 {
-    let scope = provider_ctx.enter_resolving(key);
-
-    let binding = if let Some(binding) = scope.deref() {
-        binding
-    } else {
-        panic!("Missing binding for `{}` to resolve `TODO`", key);
-    };
-
-    codegen_impl(binding, provider_ctx)
-}
-
-fn codegen_impl(implementation: &Implementation, provider_ctx: &ProviderContext) -> TokenStream2 {
-    match implementation {
-        Implementation::Factory {
-            rty: _,
-            module,
-            func,
-            injection_point,
-        } => {
-            let dep_impls: Vec<TokenStream2> = injection_point
-                .deps
-                .iter()
-                .map(|dep| codegen_key_impl(&dep.key, provider_ctx))
-                .collect();
-
-            quote! {
-                #module::#func(#(#dep_impls),*)
-            }
-        }
-        Implementation::Linked(key) => codegen_key_impl(key, provider_ctx),
     }
 }
 

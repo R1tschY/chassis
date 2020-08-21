@@ -5,12 +5,10 @@ extern crate quote;
 #[macro_use]
 extern crate syn;
 
-mod arguments;
-mod attributes;
+mod codegen;
 mod container;
 mod diagnostic;
 mod parse;
-mod signature;
 mod syn_ext;
 mod utils;
 

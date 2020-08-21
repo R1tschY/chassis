@@ -1,6 +1,6 @@
 use syn::{Attribute, GenericArgument, Ident, PathArguments, PathSegment, Type};
 
-use crate::attributes::{is_chassis_attr, parse_attr, InjectAttr};
+use crate::parse::attributes::{is_chassis_attr, parse_attr, InjectAttr};
 
 pub struct InjectFnArg {
     pub name: Option<Ident>,
