@@ -25,11 +25,16 @@ impl Parse for ComponentAttrArgs {
 impl Parse for ComponentAttrArg {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
+
+        let name = input.parse()?;
+        let assign_token = input.parse()?;
+        let bracket_token = bracketed!(content in input);
+        let value = content.parse_terminated(syn::Path::parse)?;
         Ok(ComponentAttrArg {
-            name: input.parse()?,
-            assign_token: input.parse()?,
-            bracket_token: bracketed!(content in input),
-            value: content.parse_terminated(syn::Path::parse)?,
+            name,
+            assign_token,
+            bracket_token,
+            value,
         })
     }
 }

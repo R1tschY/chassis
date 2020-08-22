@@ -43,7 +43,7 @@ fn parse_integration(
         None => {
             return Err(ChassisError::IllegalInput(
                 "Expected module implementation when using integration attribute".to_string(),
-                mod_block.span().clone(),
+                mod_block.span(),
             ))
         }
     };

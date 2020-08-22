@@ -45,7 +45,7 @@ fn codegen_provider_fn(request: Request, container: &IocContainer) -> ChassisRes
     let provider_ctx = CodegenContext::new(container);
 
     let impl_code = codegen_for_key(&request.key, &provider_ctx)?;
-    let rty = &request.key.type_();
+    let rty = &request.key.type_(); // TODO: clone with call_span
     let name = &request.name;
     let span = request.name.span(); // TODO: use Signature as span
     Ok(quote_spanned! {span=>

@@ -27,6 +27,7 @@ impl StaticKey {
         &self.ty
     }
 
+    #[allow(dead_code)]
     pub fn type_string(&self) -> &str {
         &self.ty_str
     }
@@ -79,15 +80,15 @@ pub struct Dependency {
     pub parameter_index: u8,
 }
 
-/// Kind of binding used
-///
-/// Used for inspection and error messages. Analog to [Implementation].
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum BindingType {
-    Factory,
-    Instance,
-    Linked,
-}
+// /// Kind of binding used
+// ///
+// /// Used for inspection and error messages. Analog to [Implementation].
+// #[derive(PartialEq, Copy, Clone, Debug)]
+// pub enum BindingType {
+//     Factory,
+//     Instance,
+//     Linked,
+// }
 
 /// Implementation for binding
 pub struct Implementation {

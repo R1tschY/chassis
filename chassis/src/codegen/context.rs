@@ -32,10 +32,10 @@ impl<'a> CodegenContext<'a> {
         Self::dependency_chain_inner(&self.resolving.borrow())
     }
 
-    fn dependency_chain_inner(resolving: &Vec<StaticKey>) -> Vec<(String, Span)> {
+    fn dependency_chain_inner(resolving: &[StaticKey]) -> Vec<(String, Span)> {
         resolving
             .iter()
-            .map(|k| (k.to_string(), k.type_().span().clone()))
+            .map(|k| (k.to_string(), k.type_().span()))
             .collect()
     }
 

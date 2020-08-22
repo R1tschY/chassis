@@ -46,6 +46,7 @@ pub fn parse_attr(attr: Attribute) -> InjectAttr {
     }
 }
 
+#[allow(dead_code)]
 pub fn get_annotation_attribute(attr: &[InjectAttr]) -> Option<&InjectAttr> {
     attr.iter()
         .find(|attr| attr.ty == InjectAttrType::Annotation)

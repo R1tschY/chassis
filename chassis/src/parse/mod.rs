@@ -21,7 +21,7 @@ fn drain_where<T: Clone, F: Fn(&T) -> bool>(v: &mut Vec<T>, f: F) -> Vec<T> {
 
 pub fn eq_attr_name(attr: &syn::Attribute, seg0: &str) -> bool {
     let segs = &attr.path.segments;
-    segs.len() == 1 && &segs[0].ident.to_string() == seg0
+    segs.len() == 1 && segs[0].ident == seg0
 }
 
 pub fn parse_block(mod_impl: &mut Vec<Item>) -> ChassisResult<Block> {
@@ -80,7 +80,7 @@ fn parse_signature(sig: &syn::Signature) -> ChassisResult<Request> {
             ReturnType::Default => {
                 return Err(ChassisError::IllegalInput(
                     "Return type is required".to_string(),
-                    sig.span().clone(),
+                    sig.span(),
                 ));
             }
             ReturnType::Type(_, ty) => StaticKey::new(ty.clone()),
@@ -103,7 +103,7 @@ pub fn parse_component(
                 if let Some(default) = &method.default {
                     return Err(ChassisError::IllegalInput(
                         "Default implementation not allowed".to_string(),
-                        default.span().clone(),
+                        default.span(),
                     ));
                 }
 
@@ -113,7 +113,7 @@ pub fn parse_component(
             TraitItem::Type(type_item) => {
                 return Err(ChassisError::IllegalInput(
                     "Associated type not allowed in component".to_string(),
-                    type_item.span().clone(),
+                    type_item.span(),
                 ))
             }
             _ => (),
@@ -163,12 +163,10 @@ pub fn parse_module(
                     },
                 })
             }
-            _ => {
-                return Err(ChassisError::IllegalInput(
-                    "Unexpected item in chassis module definition".to_string(),
-                    item.span().clone(),
-                ))
-            }
+            _ => Err(ChassisError::IllegalInput(
+                "Unexpected item in chassis module definition".to_string(),
+                item.span(),
+            )),
         })
         .collect();
 
@@ -178,7 +176,7 @@ pub fn parse_module(
             self_ty => {
                 return Err(ChassisError::IllegalInput(
                     "Expected simple type in static_module impl type".to_string(),
-                    self_ty.span().clone(),
+                    self_ty.span(),
                 ))
             }
         },

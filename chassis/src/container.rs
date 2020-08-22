@@ -26,8 +26,8 @@ impl IocContainer {
         if let Some(other) = other {
             return Err(ChassisError::DuplicateImplementation(
                 key.to_string(),
-                rty.span().clone(),
-                other.rty.span().clone(),
+                rty.span(),
+                other.rty.span(),
             ));
         }
         Ok(())
