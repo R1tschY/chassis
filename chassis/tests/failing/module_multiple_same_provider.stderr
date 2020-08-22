@@ -1,5 +1,11 @@
-error: Duplicate implementation for Dummy
+error: Duplicate implementation for `Dummy`
   --> $DIR/module_multiple_same_provider.rs:15:36
    |
 15 |         pub fn provide_dummy2() -> Dummy {
+   |                                    ^^^^^
+   |
+help: Other implementation found here
+  --> $DIR/module_multiple_same_provider.rs:12:36
+   |
+12 |         pub fn provide_dummy1() -> Dummy {
    |                                    ^^^^^

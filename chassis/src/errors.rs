@@ -23,9 +23,9 @@ pub fn codegen_errors(err: ChassisError) -> TokenStream2 {
             format!("Missing dependency `{}`", chain[chain.len() - 1].0),
             chain,
         ),
-        ChassisError::DuplicateImplementation(ty, one, _two) => {
-            one.error(format!("Duplicate implementation for {}", ty))
-        } // TODO: ref other impl
+        ChassisError::DuplicateImplementation(ty, one, two) => one
+            .error(format!("Duplicate implementation for `{}`", ty))
+            .help_in("Other implementation found here", two),
     }
     .emit()
 }
