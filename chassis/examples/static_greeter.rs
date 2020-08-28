@@ -28,14 +28,14 @@ mod int_mod {
     pub type Message = String;
     pub type Count = i32;
 
-    #[static_module]
+    #[module]
     impl DemoFactory {
-        /* [lazy_singleton] */
+        /* [singleton(lazy = true)] */
         pub fn provide_count() -> Count {
             5
         }
 
-        /* [eager_singleton] */
+        /* [singleton(lazy = false)] */
         pub fn provide_message() -> Message {
             "Hello World".to_string()
         }
@@ -45,7 +45,7 @@ mod int_mod {
         }
     }
 
-    #[static_component(modules = [DemoFactory], send = false, sync = false)]
+    #[component(modules = [DemoFactory], send = false, sync = false)]
     pub trait DemoComponent {
         fn resolve_greeter(&self) -> Greeter;
     }

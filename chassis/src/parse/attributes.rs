@@ -6,6 +6,7 @@ use crate::utils::to_tokens;
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum InjectAttrType {
     Annotation,
+    Singleton,
 }
 
 pub struct InjectAttr {
@@ -15,7 +16,7 @@ pub struct InjectAttr {
 
 pub fn is_chassis_attr(attr: &Attribute) -> bool {
     let segs = &attr.path.segments;
-    segs.len() == 1 && &segs[0].ident.to_string() == "annotation"
+    segs.len() == 1 && (segs[0].ident == "annotation" || segs[0].ident == "singleton")
 }
 
 pub fn parse_attr(attr: Attribute) -> InjectAttr {
@@ -37,6 +38,7 @@ pub fn parse_attr(attr: Attribute) -> InjectAttr {
 
     let ty = match &parts[0].ident.to_string() as &str {
         "annotation" => InjectAttrType::Annotation,
+        "singleton" => InjectAttrType::Singleton,
         _ => panic!("Unknown chassis attribute: {}", to_tokens(&attr)),
     };
 

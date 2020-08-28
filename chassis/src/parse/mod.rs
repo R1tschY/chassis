@@ -6,6 +6,7 @@ use crate::model::{
     Binding, Block, ComponentTrait, Dependency, Implementation, InjectionPoint, Module, Request,
     StaticKey,
 };
+use crate::parse::attributes::InjectAttrType;
 use crate::parse::signature::process_sig;
 
 mod arguments;
@@ -32,9 +33,7 @@ pub fn parse_block(mod_impl: &mut Vec<Item>) -> ChassisResult<Block> {
             // module definition
             Item::Impl(impl_block) => {
                 // TODO: implicit?
-                let attrs = drain_where(&mut impl_block.attrs, |attr| {
-                    eq_attr_name(attr, "static_module")
-                });
+                let attrs = drain_where(&mut impl_block.attrs, |attr| eq_attr_name(attr, "module"));
                 if attrs.len() > 1 {
                     // TODO: hint for every attr
                     return Err(ChassisError::IllegalInput(
@@ -50,7 +49,7 @@ pub fn parse_block(mod_impl: &mut Vec<Item>) -> ChassisResult<Block> {
             Item::Trait(trait_block) => {
                 // TODO: implicit?
                 let attrs = drain_where(&mut trait_block.attrs, |attr| {
-                    eq_attr_name(attr, "static_component")
+                    eq_attr_name(attr, "component")
                 });
                 if attrs.len() > 1 {
                     // TODO: hint for every attr
@@ -137,37 +136,7 @@ pub fn parse_module(
     let bindings: ChassisResult<Vec<_>> = impl_block
         .items
         .iter_mut()
-        .map(|item| match item {
-            ImplItem::Method(method) => {
-                let inject_fn = process_sig(method);
-                Ok(Binding {
-                    key: StaticKey::new(Box::new(inject_fn.output.outer_ty.clone())), // TODO: inner type must be used
-                    implementation: Implementation {
-                        rty: inject_fn.output.outer_ty.clone(),
-                        module: module_id.clone(),
-                        func: inject_fn.name.clone(),
-                        injection_point: InjectionPoint {
-                            qualifier: inject_fn.name.to_string(),
-                            deps: inject_fn
-                                .inputs
-                                .into_iter()
-                                .enumerate()
-                                .map(|(i, input)| {
-                                    Dependency {
-                                        parameter_index: i as u8,
-                                        key: StaticKey::new(Box::new(input.ty.outer_ty)), // TODO: attr, inner type
-                                    }
-                                })
-                                .collect(),
-                        },
-                    },
-                })
-            }
-            _ => Err(ChassisError::IllegalInput(
-                "Unexpected item in chassis module definition".to_string(),
-                item.span(),
-            )),
-        })
+        .map(|item| parse_module_fn(module_id.clone(), item))
         .collect();
 
     Ok(Module {
@@ -182,4 +151,48 @@ pub fn parse_module(
         },
         bindings: bindings?,
     })
+}
+
+fn parse_module_fn(module_id: Box<Type>, item: &mut ImplItem) -> Result<Binding, ChassisError> {
+    match item {
+        ImplItem::Method(method) => {
+            let inject_fn = process_sig(method);
+            let mut binding = Binding {
+                key: StaticKey::new(Box::new(inject_fn.output.outer_ty.clone())), // TODO: inner type must be used
+                implementation: Implementation {
+                    singleton: false,
+                    rty: inject_fn.output.outer_ty.clone(),
+                    module: module_id,
+                    func: inject_fn.name.clone(),
+                    injection_point: InjectionPoint {
+                        qualifier: inject_fn.name.to_string(),
+                        deps: inject_fn
+                            .inputs
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, input)| {
+                                Dependency {
+                                    parameter_index: i as u8,
+                                    key: StaticKey::new(Box::new(input.ty.outer_ty)), // TODO: attr, inner type
+                                }
+                            })
+                            .collect(),
+                    },
+                },
+            };
+
+            for attr in &inject_fn.attrs {
+                match attr.ty {
+                    InjectAttrType::Annotation => {} // TODO
+                    InjectAttrType::Singleton => binding.implementation.singleton = true,
+                }
+            }
+
+            Ok(binding)
+        }
+        _ => Err(ChassisError::IllegalInput(
+            "Unexpected item in chassis module definition".to_string(),
+            item.span(),
+        )),
+    }
 }

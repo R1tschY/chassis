@@ -96,6 +96,7 @@ pub struct Implementation {
     pub module: Box<syn::Type>,
     pub func: Ident,
     pub injection_point: InjectionPoint,
+    pub singleton: bool,
 }
 
 /// Bind a implementation to a key
