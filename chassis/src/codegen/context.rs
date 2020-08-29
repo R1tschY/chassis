@@ -7,12 +7,20 @@ use crate::model::{Implementation, StaticKey};
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 
+/// Environment of code generation
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CodegenEnv {
+    TraitImpl,
+    Ctor,
+}
+
 /// Context for generation of one provider.
 ///
 /// helps detecting cyclic dependencies.
 pub struct CodegenContext<'a> {
     container: &'a IocContainer,
     resolving: RefCell<Vec<StaticKey>>,
+    env: CodegenEnv,
 }
 
 pub struct CodegenContextScope<'a, 'b> {
@@ -21,11 +29,16 @@ pub struct CodegenContextScope<'a, 'b> {
 }
 
 impl<'a> CodegenContext<'a> {
-    pub fn new(container: &'a IocContainer) -> Self {
+    pub fn new(container: &'a IocContainer, env: CodegenEnv) -> Self {
         Self {
             container,
+            env,
             resolving: RefCell::new(vec![]),
         }
+    }
+
+    pub fn env(&self) -> CodegenEnv {
+        self.env
     }
 
     pub fn dependency_chain(&self) -> Vec<(String, Span)> {
