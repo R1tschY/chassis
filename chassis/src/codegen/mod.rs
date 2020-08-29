@@ -1,29 +1,25 @@
-use std::collections::HashSet;
 use std::ops::Deref;
 
 use syn::export::TokenStream2;
 
 use crate::codegen::context::CodegenContext;
+use crate::codegen::singletons::find_singletons;
 use crate::container::IocContainer;
 use crate::errors::{ChassisError, ChassisResult};
 use crate::model::{ComponentTrait, Implementation, Request, StaticKey};
 use crate::syn_ext::IdentExt;
+use singletons::SINGLETON_FIELD_PREFIX;
 
 mod context;
+mod singletons;
 
-const SINGLETON_FIELD_PREFIX: &str = "singleton_of_";
 const TRAIT_IMPL_SUFFIX: &str = "Impl";
 
 pub fn codegen_component_impl(
     component: ComponentTrait,
     container: &IocContainer,
 ) -> ChassisResult<TokenStream2> {
-    let mut singletons: HashSet<StaticKey> = HashSet::new();
-    component
-        .requests
-        .iter()
-        .map(|request| singletons_for_provider(request, container, &mut singletons))
-        .collect::<ChassisResult<()>>()?;
+    let singletons = find_singletons(&component, container)?;
 
     let impl_items = component
         .requests
@@ -77,44 +73,6 @@ pub fn codegen_component_impl(
             #(#impl_items)*
         }
     })
-}
-
-fn singletons_for_provider(
-    request: &Request,
-    container: &IocContainer,
-    singletons: &mut HashSet<StaticKey>,
-) -> ChassisResult<()> {
-    let provider_ctx = CodegenContext::new(container);
-    singletons_for_key(&request.key, &provider_ctx, singletons)
-}
-
-fn singletons_for_key(
-    key: &StaticKey,
-    ctx: &CodegenContext,
-    singletons: &mut HashSet<StaticKey>,
-) -> ChassisResult<()> {
-    let scope = ctx.enter_resolving(key)?;
-
-    if singletons.contains(key) {
-        return Ok(());
-    }
-
-    if let Some(implementation) = scope.deref() {
-        implementation
-            .injection_point
-            .deps
-            .iter()
-            .map(|dep| singletons_for_key(&dep.key, ctx, singletons))
-            .collect::<ChassisResult<()>>()?;
-
-        if implementation.singleton {
-            singletons.insert(key.clone());
-        }
-
-        Ok(())
-    } else {
-        Err(ChassisError::MissingDependency(ctx.dependency_chain()))
-    }
 }
 
 /// Creates function for trait implementation
