@@ -2,14 +2,16 @@ use std::ops::Deref;
 
 use syn::export::TokenStream2;
 
+use singletons::SINGLETON_FIELD_PREFIX;
+
 use crate::codegen::context::{CodegenContext, CodegenEnv};
 use crate::codegen::generator::ComponentBuilder;
 use crate::codegen::singletons::find_singletons;
 use crate::container::IocContainer;
 use crate::errors::{ChassisError, ChassisResult};
-use crate::model::{ComponentTrait, Implementation, Request, StaticKey};
+use crate::key::StaticKey;
+use crate::model::{ComponentTrait, Implementation, Request};
 use crate::syn_ext::IdentExt;
-use singletons::SINGLETON_FIELD_PREFIX;
 
 mod context;
 mod generator;
@@ -58,7 +60,7 @@ fn codegen_provider_fn(request: Request, container: &IocContainer) -> ChassisRes
     let provider_ctx = CodegenContext::new(container, CodegenEnv::TraitImpl);
 
     let code = codegen_for_key(&request.key, &provider_ctx)?;
-    let rty = &request.key.type_(); // TODO: clone with call_span
+    let rty = &request.ty; // TODO: clone with call_span
     let name = &request.name;
     let span = request.name.span(); // TODO: use Signature as span
 

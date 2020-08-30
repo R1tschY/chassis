@@ -1,11 +1,13 @@
 use std::cell::RefCell;
 use std::ops::Deref;
 
-use crate::container::IocContainer;
-use crate::errors::{ChassisError, ChassisResult};
-use crate::model::{Implementation, StaticKey};
 use proc_macro2::Span;
 use syn::spanned::Spanned;
+
+use crate::container::IocContainer;
+use crate::errors::{ChassisError, ChassisResult};
+use crate::key::StaticKey;
+use crate::model::Implementation;
 
 /// Environment of code generation
 #[derive(Debug, Copy, Clone, PartialEq)]

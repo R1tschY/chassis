@@ -2,9 +2,9 @@ use syn::spanned::Spanned;
 use syn::{ImplItem, Item, ItemImpl, ItemTrait, ReturnType, TraitItem, Type};
 
 use crate::errors::{ChassisError, ChassisResult};
+use crate::key::StaticKey;
 use crate::model::{
     Binding, Block, ComponentTrait, Dependency, Implementation, InjectionPoint, Module, Request,
-    StaticKey,
 };
 use crate::parse::attributes::InjectAttrType;
 use crate::parse::signature::process_sig;
@@ -73,17 +73,20 @@ pub fn parse_block(mod_impl: &mut Vec<Item>) -> ChassisResult<Block> {
 }
 
 fn parse_signature(sig: &syn::Signature) -> ChassisResult<Request> {
+    let ty = match &sig.output {
+        ReturnType::Default => {
+            return Err(ChassisError::IllegalInput(
+                "Return type is required".to_string(),
+                sig.span(),
+            ));
+        }
+        ReturnType::Type(_, ty) => ty.clone(),
+    };
+
     // TODO: len(args) == 0
     Ok(Request {
-        key: match &sig.output {
-            ReturnType::Default => {
-                return Err(ChassisError::IllegalInput(
-                    "Return type is required".to_string(),
-                    sig.span(),
-                ));
-            }
-            ReturnType::Type(_, ty) => StaticKey::new(ty.clone()),
-        },
+        key: StaticKey::new(ty.clone()),
+        ty: *ty,
         name: sig.ident.clone(),
     })
 }

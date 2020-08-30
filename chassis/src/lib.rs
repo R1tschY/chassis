@@ -8,17 +8,18 @@ extern crate syn;
 use proc_macro::TokenStream;
 
 use syn::export::TokenStream2;
+use syn::spanned::Spanned;
 
 use crate::codegen::codegen_component_impl;
 use crate::container::IocContainer;
 use crate::errors::{codegen_errors, ChassisError, ChassisResult};
 use crate::parse::parse_block;
-use syn::spanned::Spanned;
 
 mod codegen;
 mod container;
 mod diagnostic;
 mod errors;
+mod key;
 mod model;
 mod parse;
 mod syn_ext;

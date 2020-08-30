@@ -1,8 +1,10 @@
+use std::ops::Deref;
+
 use crate::codegen::context::{CodegenContext, CodegenEnv};
 use crate::container::IocContainer;
 use crate::errors::{ChassisError, ChassisResult};
-use crate::model::{ComponentTrait, Request, StaticKey};
-use std::ops::Deref;
+use crate::key::StaticKey;
+use crate::model::{ComponentTrait, Request};
 
 pub const SINGLETON_FIELD_PREFIX: &str = "singleton_of_";
 

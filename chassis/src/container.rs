@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use crate::errors::{ChassisError, ChassisResult};
-use crate::model::{Implementation, Module, StaticKey};
 use syn::spanned::Spanned;
+
+use crate::errors::{ChassisError, ChassisResult};
+use crate::key::StaticKey;
+use crate::model::{Implementation, Module};
 
 pub struct IocContainer {
     bindings: HashMap<StaticKey, Implementation>,
