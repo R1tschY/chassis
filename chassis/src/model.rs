@@ -1,4 +1,5 @@
 use proc_macro2::Ident;
+use syn::export::Span;
 
 use crate::key::StaticKey;
 
@@ -19,6 +20,10 @@ pub struct InjectionPoint {
 pub struct Dependency {
     /// Key for injection
     pub key: StaticKey,
+
+    // Span of type in injection point
+    pub span: Span,
+
     /// index of parameter in injection point
     pub parameter_index: u8,
 }

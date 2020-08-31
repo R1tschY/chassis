@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::ops::Deref;
 
 use proc_macro2::Span;
-use syn::spanned::Spanned;
 
 use crate::container::IocContainer;
 use crate::errors::{ChassisError, ChassisResult};
@@ -21,7 +20,7 @@ pub enum CodegenEnv {
 /// helps detecting cyclic dependencies.
 pub struct CodegenContext<'a> {
     container: &'a IocContainer,
-    resolving: RefCell<Vec<StaticKey>>,
+    resolving: RefCell<Vec<(StaticKey, Span)>>,
     env: CodegenEnv,
 }
 
@@ -47,23 +46,27 @@ impl<'a> CodegenContext<'a> {
         Self::dependency_chain_inner(&self.resolving.borrow())
     }
 
-    fn dependency_chain_inner(resolving: &[StaticKey]) -> Vec<(String, Span)> {
+    fn dependency_chain_inner(resolving: &[(StaticKey, Span)]) -> Vec<(String, Span)> {
         resolving
             .iter()
-            .map(|k| (k.to_string(), k.type_().span()))
+            .map(|(k, span)| (k.to_string(), *span))
             .collect()
     }
 
-    pub fn enter_resolving(&self, key: &StaticKey) -> ChassisResult<CodegenContextScope<'_, 'a>> {
+    pub fn enter_resolving(
+        &self,
+        key: &StaticKey,
+        span: Span,
+    ) -> ChassisResult<CodegenContextScope<'_, 'a>> {
         {
             let mut resolving = self.resolving.borrow_mut();
-            if resolving.contains(key) {
-                resolving.push(key.clone());
+            if resolving.iter().any(|(k, _)| k == key) {
+                resolving.push((key.clone(), span));
                 let req_chain = Self::dependency_chain_inner(&resolving);
                 resolving.pop();
                 return Err(ChassisError::CyclicDependency(req_chain));
             }
-            resolving.push(key.clone());
+            resolving.push((key.clone(), span));
         }
 
         let result = self.container.resolve(key);

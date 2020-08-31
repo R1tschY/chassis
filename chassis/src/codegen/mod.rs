@@ -1,5 +1,6 @@
 use std::ops::Deref;
 
+use proc_macro2::Span;
 use syn::export::TokenStream2;
 
 use singletons::SINGLETON_FIELD_PREFIX;
@@ -35,11 +36,11 @@ pub fn codegen_component_impl(
     // codegen singletons
     for singleton in singletons {
         let ctx = CodegenContext::new(container, CodegenEnv::Ctor);
-        let binding = ctx.enter_resolving(&singleton)?.unwrap();
+        let binding = ctx.enter_resolving(&singleton, Span::call_site())?.unwrap();
 
         let field = binding.func.prepend(SINGLETON_FIELD_PREFIX);
         let code = codegen_impl(binding, &ctx, true)?;
-        component_builder.field(field, singleton.type_().clone(), code);
+        component_builder.field(field, binding.rty.clone(), code);
     }
 
     // codegen component
@@ -73,7 +74,7 @@ fn codegen_provider_fn(request: Request, container: &IocContainer) -> ChassisRes
 
 /// Creates expression for getting `key`
 fn codegen_for_key(key: &StaticKey, ctx: &CodegenContext) -> ChassisResult<TokenStream2> {
-    let scope = ctx.enter_resolving(key)?;
+    let scope = ctx.enter_resolving(key, Span::call_site())?;
 
     if let Some(binding) = scope.deref() {
         codegen_impl(binding, ctx, false)

@@ -1,5 +1,8 @@
 use std::ops::Deref;
 
+use syn::export::Span;
+use syn::spanned::Spanned;
+
 use crate::codegen::context::{CodegenContext, CodegenEnv};
 use crate::container::IocContainer;
 use crate::errors::{ChassisError, ChassisResult};
@@ -14,15 +17,16 @@ fn singletons_for_provider(
     singletons: &mut Vec<StaticKey>,
 ) -> ChassisResult<()> {
     let provider_ctx = CodegenContext::new(container, CodegenEnv::TraitImpl);
-    singletons_for_key(&request.key, &provider_ctx, singletons)
+    singletons_for_key(&request.key, request.ty.span(), &provider_ctx, singletons)
 }
 
 fn singletons_for_key(
     key: &StaticKey,
+    span: Span,
     ctx: &CodegenContext,
     singletons: &mut Vec<StaticKey>,
 ) -> ChassisResult<()> {
-    let scope = ctx.enter_resolving(key)?;
+    let scope = ctx.enter_resolving(key, span)?;
 
     if singletons.contains(key) {
         return Ok(());
@@ -33,7 +37,7 @@ fn singletons_for_key(
             .injection_point
             .deps
             .iter()
-            .map(|dep| singletons_for_key(&dep.key, ctx, singletons))
+            .map(|dep| singletons_for_key(&dep.key, dep.span, ctx, singletons))
             .collect::<ChassisResult<()>>()?;
 
         if implementation.singleton {

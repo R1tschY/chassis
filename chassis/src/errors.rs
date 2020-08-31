@@ -1,9 +1,13 @@
-use crate::diagnostic::{Diagnostic, DiagnosticExt};
+use std::fmt;
+
 use proc_macro2::Span;
 use syn::export::TokenStream2;
 
+use crate::diagnostic::{Diagnostic, DiagnosticExt};
+
 #[derive(Debug)]
 pub enum ChassisError {
+    InternalError(String),
     IllegalInput(String, Span),
     CyclicDependency(Vec<(String, Span)>),
     MissingDependency(Vec<(String, Span)>),
@@ -12,8 +16,15 @@ pub enum ChassisError {
 
 pub type ChassisResult<T> = Result<T, ChassisError>;
 
+impl From<fmt::Error> for ChassisError {
+    fn from(_: fmt::Error) -> Self {
+        ChassisError::InternalError("Format error".into())
+    }
+}
+
 pub fn codegen_errors(err: ChassisError) -> TokenStream2 {
     match err {
+        ChassisError::InternalError(message) => Span::call_site().error(message),
         ChassisError::IllegalInput(message, span) => span.error(message),
         ChassisError::CyclicDependency(chain) => error_from_dep_chain(
             format!("Cyclic dependency for `{}`", chain[chain.len() - 1].0),

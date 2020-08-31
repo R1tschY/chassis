@@ -85,7 +85,7 @@ fn parse_signature(sig: &syn::Signature) -> ChassisResult<Request> {
 
     // TODO: len(args) == 0
     Ok(Request {
-        key: StaticKey::new(ty.clone()),
+        key: StaticKey::try_new(&ty)?,
         ty: *ty,
         name: sig.ident.clone(),
     })
@@ -156,12 +156,12 @@ pub fn parse_module(
     })
 }
 
-fn parse_module_fn(module_id: Box<Type>, item: &mut ImplItem) -> Result<Binding, ChassisError> {
+fn parse_module_fn(module_id: Box<Type>, item: &mut ImplItem) -> ChassisResult<Binding> {
     match item {
         ImplItem::Method(method) => {
             let inject_fn = process_sig(method);
             let mut binding = Binding {
-                key: StaticKey::new(Box::new(inject_fn.output.outer_ty.clone())), // TODO: inner type must be used
+                key: StaticKey::try_new(&inject_fn.output.outer_ty)?, // TODO: inner type must be used
                 implementation: Implementation {
                     singleton: false,
                     rty: inject_fn.output.outer_ty.clone(),
@@ -174,12 +174,13 @@ fn parse_module_fn(module_id: Box<Type>, item: &mut ImplItem) -> Result<Binding,
                             .into_iter()
                             .enumerate()
                             .map(|(i, input)| {
-                                Dependency {
+                                Ok(Dependency {
                                     parameter_index: i as u8,
-                                    key: StaticKey::new(Box::new(input.ty.outer_ty)), // TODO: attr, inner type
-                                }
+                                    span: input.ty.outer_ty.span(),
+                                    key: StaticKey::try_new(&input.ty.outer_ty)?, // TODO: attr, inner type
+                                })
                             })
-                            .collect(),
+                            .collect::<ChassisResult<Vec<Dependency>>>()?,
                     },
                 },
             };
