@@ -305,6 +305,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn check_type() {
+        let ty: syn::Type = syn::parse2(quote! { String }).unwrap();
+        assert_eq!("String", ty.to_key_str().unwrap());
+    }
+
+    #[test]
+    fn check_paren() {
+        let ty: syn::Type = syn::parse2(quote! { ((String)) }).unwrap();
+        assert_eq!("String", ty.to_key_str().unwrap());
+    }
+
+    #[test]
     fn check_path() {
         let ty: syn::Type = syn::parse2(quote! { a::b }).unwrap();
         assert_eq!("a::b", ty.to_key_str().unwrap());

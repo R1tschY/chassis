@@ -1,13 +1,13 @@
 [package]
 name = "chassis"
 version = "0.1.0"
-authors = ["R1tschY <r1tschy@posteo.de>"]
+authors = ["Richard Liebscher <r1tschy@posteo.de>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-description = "Compile time dependency injection framework"
+description = "Compile-time dependency injection framework"
 repository = "https://github.com/R1tschY/chassis"
 readme = "README.md"
-keywords = ["dependency-injection"]
+keywords = ["dependency-injection", "inversion-of-control", "di"]
 
 [lib]
 proc-macro = true

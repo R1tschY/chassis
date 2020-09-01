@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use chassis::integration;
 
 pub struct Greeter {
@@ -23,85 +21,34 @@ impl Greeter {
 mod int_mod {
     use super::*;
 
-    pub struct DemoFactory;
+    pub struct DemoModule;
 
-    pub type Message = String;
-    pub type Count = i32;
+    pub struct Message(String);
+    pub struct Count(i32);
 
-    #[module]
-    impl DemoFactory {
-        /* [singleton(lazy = true)] */
+    impl DemoModule {
         pub fn provide_count() -> Count {
-            5
+            Count(5)
         }
 
-        /* [singleton(lazy = false)] */
         pub fn provide_message() -> Message {
-            "Hello World".to_string()
+            Message("Hello World".to_string())
         }
 
         pub fn provide_greeter(message: Message, count: Count) -> Greeter {
-            Greeter::new(message.to_string(), count)
+            Greeter::new(message.0, count.0)
         }
     }
 
-    #[component(modules = [DemoFactory], send = false, sync = false)]
     pub trait DemoComponent {
         fn resolve_greeter(&self) -> Greeter;
     }
 }
 
-// TODO: Idea for introspection of modules: compile time visitor
-// trait Visitable {
-//     fn accept<T: Visitor>();
-// }
-//
-// impl Visitable for int_mod::DemoModule {
-//     fn accept<T: Visitor>() {
-//         Visitor::visit::<Greeter>();
-//     }
-// }
-//
-// trait Visitor {
-//     fn visit<T>();
-// }
-
-// GENERATED
-
-/*struct ChassisDemoComponent {
-    // module1: DemoModule,
-}
-
-impl ChassisDemoComponent {
-    pub fn new() -> Self {
-        Self {
-            //module1: DemoModule::default()
-        }
-    }
-
-    pub fn build(module1: DemoModule) -> Self {
-        Self {
-            //module1
-        }
-    }
-}
-
-impl DemoComponent for ChassisDemoComponent {
-    fn resolve_greeter() -> Arc<Greeter> {
-        Arc::new(DemoModule::provide_greeter(
-            Arc::new(DemoModule::provide_message()),
-            Arc::new(DemoModule::provide_count()),
-        ))
-    }
-}*/
-
-// /GENERATED
-
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     use crate::int_mod::DemoComponent;
 
     let injector = int_mod::DemoComponentImpl::new();
     let greeter = injector.resolve_greeter();
     greeter.say_hello();
-    Ok(())
 }
