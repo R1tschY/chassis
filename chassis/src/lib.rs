@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/chassis/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/chassis/0.2.0")]
 #![cfg_attr(nightly_diagnostics, feature(proc_macro_diagnostic, proc_macro_span))]
 
 //! Compile-time dependency injector.
@@ -18,7 +18,8 @@
 //!
 //! Add `chassis` to your crate dependencies
 //! ```toml
-//! chassis = "^0.1.0"
+//! [dependencies]
+//! chassis = "^0.2.0"
 //! ```
 //!
 //! Create a module for your dependency injection logic and annotate it with
