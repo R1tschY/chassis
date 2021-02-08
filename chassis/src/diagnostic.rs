@@ -1,6 +1,7 @@
-use proc_macro2::Span;
 use std::convert::TryFrom;
-use syn::export::TokenStream2;
+
+use proc_macro2::Span;
+use proc_macro2::TokenStream as TokenStream2;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub(crate) enum DiagnosticLevel {

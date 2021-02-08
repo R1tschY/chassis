@@ -1,7 +1,7 @@
 use std::fmt;
 
 use proc_macro2::Span;
-use syn::export::TokenStream2;
+use proc_macro2::TokenStream as TokenStream2;
 
 use crate::diagnostic::{Diagnostic, DiagnosticExt};
 

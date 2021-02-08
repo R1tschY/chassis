@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use syn::export::Span;
+use proc_macro2::Span;
 use syn::spanned::Spanned;
 
 use crate::codegen::context::{CodegenContext, CodegenEnv};

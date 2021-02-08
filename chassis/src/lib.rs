@@ -242,7 +242,7 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 
-use syn::export::TokenStream2;
+use proc_macro2::TokenStream as TokenStream2;
 use syn::spanned::Spanned;
 
 use crate::codegen::codegen_component_impl;

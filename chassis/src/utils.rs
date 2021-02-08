@@ -1,4 +1,5 @@
-use syn::export::{ToTokens, TokenStream2};
+use proc_macro2::TokenStream as TokenStream2;
+use quote::ToTokens;
 
 pub fn to_tokens(x: &impl ToTokens) -> TokenStream2 {
     let mut tokens = TokenStream2::new();
