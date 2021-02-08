@@ -1,5 +1,4 @@
-use proc_macro2::Ident;
-use syn::export::Span;
+use proc_macro2::{Ident, Span};
 
 use crate::key::StaticKey;
 
