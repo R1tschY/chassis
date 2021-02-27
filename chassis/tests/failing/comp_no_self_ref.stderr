@@ -30,7 +30,7 @@ error[E0053]: method `resolve_dummy` has an incompatible type for trait
 52 |         fn resolve_dummy(self: &Box<Self>) -> Dummy;
    |            ^^^^^^^^^^^^^       ---------- type in trait
    |            |
-   |            expected struct `std::boxed::Box`, found struct `box_self::DummyFactoryImpl`
+   |            expected struct `Box`, found struct `box_self::DummyFactoryImpl`
    |
-   = note: expected fn pointer `fn(&std::boxed::Box<box_self::DummyFactoryImpl>) -> Dummy`
+   = note: expected fn pointer `fn(&Box<box_self::DummyFactoryImpl>) -> Dummy`
               found fn pointer `fn(&box_self::DummyFactoryImpl) -> Dummy`
