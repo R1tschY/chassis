@@ -7,7 +7,7 @@ use syn::Expr;
 use crate::attributes::get_annotation_attribute;
 use crate::signature::{process_sig, InjectFn, WrapperType};
 use crate::syn_ext::IdentExt;
-use syn::export::TokenStream2;
+use proc_macro2::TokenStream as TokenStream2;
 
 pub const INJECT_META_PREFIX: &str = "__injectbind_";
 pub const INJECT_PREFIX: &str = "__inject_";

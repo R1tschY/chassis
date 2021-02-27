@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use std::ops::Deref;
 
-use syn::export::TokenStream2;
+use proc_macro2::TokenStream as TokenStream2;
 use syn::spanned::Spanned;
 use syn::{FnArg, Signature, Type};
 
