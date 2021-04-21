@@ -2,7 +2,7 @@
 
 *Dependency injection frameworks for Rust*
 
-Two dependency injection frameworks live in this repository
+Two dependency injection frameworks life in this repository.
 
 ## [`chassis`]
 
