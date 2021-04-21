@@ -37,8 +37,7 @@ fn singletons_for_key(
             .injection_point
             .deps
             .iter()
-            .map(|dep| singletons_for_key(&dep.key, dep.span, ctx, singletons))
-            .collect::<ChassisResult<()>>()?;
+            .try_for_each(|dep| singletons_for_key(&dep.key, dep.span, ctx, singletons))?;
 
         if implementation.singleton {
             singletons.push(key.clone());
@@ -61,7 +60,6 @@ pub fn find_singletons(
     component
         .requests
         .iter()
-        .map(|request| singletons_for_provider(request, container, &mut singletons))
-        .collect::<ChassisResult<()>>()?;
+        .try_for_each(|request| singletons_for_provider(request, container, &mut singletons))?;
     Ok(singletons)
 }
