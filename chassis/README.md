@@ -13,10 +13,10 @@
 
 * Unscoped: create a new instance everytime
     * default
-    * Type must not implement `Clone`
-* Singletons: only one instance per component
+    * no required traits
+* Eager Singletons: only one instance per component
     * Type must implement `Clone`
-    * Created when component is created
+    * Created with component
 
 ## Example
 ```rust
