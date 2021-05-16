@@ -152,11 +152,13 @@ impl<T: ?Sized + 'static, U, L: Loader<U>> Loader<T> for AsTrait<T, U, L> {
     }
 }*/
 
+#[cfg(nightly_unsize)]
 pub(crate) struct ConverterBuilder<T: ?Sized + 'static, U: ?Sized + 'static>(
     PhantomData<T>,
     PhantomData<U>,
 );
 
+#[cfg(nightly_unsize)]
 impl<T: ?Sized + 'static, U: ?Sized + 'static> ConverterBuilder<T, U> {
     pub fn new() -> Self {
         Self(PhantomData, PhantomData)
@@ -170,12 +172,14 @@ impl<T: ?Sized + 'static, U: ?Sized + 'static> ConverterBuilder<T, U> {
     }
 }
 
+#[cfg(nightly_unsize)]
 pub(crate) struct ConverterFactory<T, U, L>(L, PhantomData<U>, PhantomData<T>)
 where
     T: ?Sized + 'static,
     U: ?Sized + 'static,
     L: Fn(Arc<U>) -> Arc<T>;
 
+#[cfg(nightly_unsize)]
 impl<T, U, L> Factory<T> for ConverterFactory<T, U, L>
 where
     T: ?Sized + 'static,
